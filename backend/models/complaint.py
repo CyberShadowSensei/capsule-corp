@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Integer, String, Text
+from sqlalchemy import Column, DateTime, Integer, String, Text, Enum
 from sqlalchemy.sql import func
 
 from database import Base
@@ -41,5 +41,5 @@ class Complaint(Base):
     ai_rationale = Column(Text, nullable=True)
 
     # Status and async job tracking
-    status = Column(String, default="open", nullable=False)
+    status = Column(Enum("draft", "pending_triage", "under_investigation", "capa_assigned", "closed", name="complaint_status"), default="draft", nullable=False)
     job_id = Column(String, nullable=True)

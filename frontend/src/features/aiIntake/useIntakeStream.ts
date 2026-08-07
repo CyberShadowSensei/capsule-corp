@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
-import { AppDispatch } from '../../store';
+import type { AppDispatch } from '../../store';
 import { updateJobState } from '../../features/aiIntake/aiIntakeSlice';
 import { applyAiFields } from '../../features/complaintForm/complaintFormSlice';
-import { IntakeJob } from '../../types';
+import type { IntakeJob } from '../../types';
 
 /**
  * Subscribes to the SSE stream for a given job_id.

@@ -1,0 +1,46 @@
+FORMAL QUALITY COMPLAINT AND ADVERSE DRUG REACTION REPORT
+
+Submitted by: Dr. Rajesh Nair, Pharmacovigilance Lead
+Organization: PharmaAssist Hospitals Network
+Email: r.nair@pharmaassist.in
+Phone: +91 80 4567 8901
+Date of Complaint: 2026-07-22
+
+--- PRODUCT INFORMATION ---
+
+Product Name: Atorvastatin Calcium Tablets 20mg
+Brand Name: AtorShield 20
+Batch Number: ATV24907B
+Manufacturing Date: 2026-01-15
+Expiry Date: 2027-01-14
+Quantity Received: 5000 tablets (10 x 500-count bulk packs)
+
+--- COMPLAINT DESCRIPTION ---
+
+We have received reports from three different hospital pharmacists within our network regarding unusual tablet appearance and reported adverse events from patients consuming tablets from the above batch.
+
+Complaint Type: Product Quality Defect with suspected Adverse Drug Reaction
+
+Detailed Account:
+Pharmacist at City General Hospital (Dr. Priya Mehta) flagged that tablets from pack lot ATV24907B-P3 were visibly discolored - presenting with a yellowish hue instead of the standard white. A subsequent complaint from Regional Medical Center noted that two patients (Patient IDs anonymized as P-001 and P-002) reported nausea and unusual fatigue within 48 hours of switching to this batch. A third report from Lakeside Clinic described tablets as having a slightly unusual odor.
+
+The complaints span a period from 2026-07-18 to 2026-07-21. All three facilities have quarantined their remaining stock from this batch.
+
+Additionally, our internal dissolution testing on 6 retained samples showed dissolution rates below specification in 2 samples (67% and 71% vs the 80% minimum at 30 minutes Q value). This is potentially indicative of a formulation or manufacturing process deviation.
+
+--- REGULATORY CONTEXT ---
+
+Given the suspected adverse drug reactions and out-of-spec dissolution results, we are treating this as a potentially reportable event under Schedule Y of the Drugs and Cosmetics Act. We are filing this complaint concurrently with our local pharmacovigilance authority.
+
+We request:
+1. Immediate batch recall assessment
+2. A full investigation report within 15 business days
+3. Root cause analysis with CAPA documentation
+4. Regulatory notification support
+
+This complaint is being escalated directly to your Quality Director and Regulatory Affairs team.
+
+Regards,
+Dr. Rajesh Nair
+Pharmacovigilance Lead
+PharmaAssist Hospitals Network

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../store';
+import type { AppDispatch, RootState } from '../../store';
 import { setField, setSaving, setSaveError, setSavedId, resetForm } from './complaintFormSlice';
 import TextField from '../../components/ui/TextField/TextField';
 import TextareaField from '../../components/ui/TextareaField/TextareaField';
@@ -29,7 +29,7 @@ const ComplaintForm: React.FC = () => {
   const f = (key: keyof typeof fields) => fields[key] as string ?? '';
   const ai = (key: keyof typeof aiFilled) => aiFilled[key] ?? false;
   const set = (key: keyof typeof fields) => (value: string) =>
-    dispatch(setField({ key, value: value || null }));
+    dispatch(setField({ key: key as any, value: value || null }));
 
   const handleSave = async () => {
     dispatch(setSaving(true));

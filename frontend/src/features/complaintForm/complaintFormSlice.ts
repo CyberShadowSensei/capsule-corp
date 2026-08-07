@@ -1,5 +1,5 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { ComplaintCreate } from '../../types';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import type { ComplaintCreate } from '../../types';
 
 // Per-field AI-filled flags track which fields were populated by the AI assistant.
 // Cleared automatically when the user edits the field.

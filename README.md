@@ -37,6 +37,7 @@ graph TD
 
 - **AI-Driven Data Extraction**: Automatically extracts complaint details from uploaded documents (PDF, TXT, DOCX, EML) or pasted text.
 - **Natural Language Chat**: Allows users to log or edit complaints using a conversational interface.
+- **Complaints List Dashboard**: Searchable and filterable dashboard of all logged complaints with a read-only detail view.
 - **Risk Assessment**: AI evaluates the severity and priority of complaints and proposes actions.
 - **Audit Trail**: Preserves the original AI suggestions for severity and priority.
 - **Real-time Updates**: Uses Server-Sent Events (SSE) to stream pipeline progress to the frontend.

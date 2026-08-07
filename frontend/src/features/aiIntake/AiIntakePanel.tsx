@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../store';
+import type { AppDispatch, RootState } from '../../store';
 import { setJobId, setActiveTab, addChatMessage, setChatLoading } from './aiIntakeSlice';
 import { useIntakeStream } from './useIntakeStream';
 import { applyAiFields } from '../complaintForm/complaintFormSlice';
@@ -204,7 +204,7 @@ const AiIntakePanel: React.FC = () => {
                     : 'Upload or paste a complaint document to begin.'}
                 </p>
               )}
-              {chatMessages.map((msg, i) => (
+              {chatMessages.map((msg: any, i: number) => (
                 <div key={i} className={`chat-bubble ${msg.role}`}>
                   <span className="bubble-role">{msg.role === 'user' ? 'You' : 'Copilot'}</span>
                   {msg.role === 'assistant' && (msg.intent === 'log' || msg.intent === 'edit') && (

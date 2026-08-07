@@ -1,0 +1,74 @@
+.complaints-list-container {
+  padding: 20px;
+}
+.filters {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+}
+.filters label {
+  margin-right: 5px;
+}
+.filters select {
+  padding: 4px;
+}
+.error-msg {
+  color: red;
+}
+.table-container {
+  overflow-x: auto;
+}
+.complaints-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.complaints-table th,
+.complaints-table td {
+  padding: 8px;
+}
+.complaints-table thead tr {
+  border-bottom: 2px solid #ccc;
+  text-align: left;
+}
+.complaints-table tbody tr {
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+}
+.complaint-detail-loading,
+.complaint-detail-error {
+  padding: 20px;
+}
+.complaint-detail-error .error-text {
+  color: red;
+  margin-bottom: 10px;
+}
+.btn-back {
+  padding: 8px 16px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+.complaint-detail {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 20px;
+}
+.detail-section {
+  border: 1px solid #ccc;
+  padding: 15px;
+  border-radius: 4px;
+}
+.detail-section-full {
+  grid-column: 1 / -1;
+}
+.detail-text-block {
+  background: #f9f9f9;
+  padding: 10px;
+  border-radius: 4px;
+  white-space: pre-wrap;
+}

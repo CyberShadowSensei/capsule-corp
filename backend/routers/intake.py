@@ -14,10 +14,11 @@ from sqlalchemy.orm import Session
 
 from core.exceptions import IntakeJobNotFoundError, ValidationError as AppValidationError
 
+import os
 from config import settings
 from database import get_db
 from models.intake_job import IntakeJob
-from repositories import intake_repository
+from repositories import intake_repository, chat_repository
 from services import intake_service
 
 logger = logging.getLogger(__name__)
@@ -35,21 +36,22 @@ class PasteRequest(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     current_fields: Optional[Dict[str, Any]] = None
+    job_id: Optional[str] = None
 
 
 @router.post("/upload")
-async def upload_complaint(
+def upload_complaint(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):
-    import os
     ext = os.path.splitext(file.filename or "")[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise AppValidationError(f"File type not allowed. Allowed: {sorted(ALLOWED_EXTENSIONS)}")
 
-    # Validate file size
-    content = await file.read()
+    # Validate file size (sync since file was already spooled, but wait, fastapi UploadFile read() is async)
+    # Actually, in def, file.file.read() should be used instead of await file.read()
+    content = file.file.read()
     max_bytes = settings.MAX_UPLOAD_MB * 1024 * 1024
     if len(content) > max_bytes:
         raise AppValidationError(f"File exceeds {settings.MAX_UPLOAD_MB}MB limit")
@@ -63,7 +65,7 @@ async def upload_complaint(
 
 
 @router.post("/paste")
-async def paste_complaint(
+def paste_complaint(
     request: PasteRequest,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
@@ -81,7 +83,6 @@ async def paste_complaint(
 
 @router.get("/{job_id}")
 def get_job(job_id: str, db: Session = Depends(get_db)):
-    from repositories import chat_repository
     job = intake_repository.get_by_job_id(db, job_id)
     if job is None:
         raise IntakeJobNotFoundError("Job not found")
@@ -131,6 +132,22 @@ async def stream_job(job_id: str, db: Session = Depends(get_db)):
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
+def _handle_chat(job_id: Optional[str], request: ChatRequest, db: Session):
+    actual_job_id = job_id or request.job_id
+    if not actual_job_id:
+        actual_job_id = str(uuid.uuid4())
+        intake_service.create_job(db, job_id=actual_job_id, source_type="pasted_text")
+    
+    result = intake_service.chat(db, job_id=actual_job_id, message=request.message, current_fields=request.current_fields)
+    
+    if isinstance(result, dict):
+        result["job_id"] = actual_job_id
+    return result
+
+@router.post("/chat")
+def chat_stateless(request: ChatRequest, db: Session = Depends(get_db)):
+    return _handle_chat(None, request, db)
+
 @router.post("/{job_id}/chat")
-def chat_with_job(job_id: str, request: ChatRequest, db: Session = Depends(get_db)):
-    return intake_service.chat(db, job_id=job_id, message=request.message, current_fields=request.current_fields)
+def chat_with_job_id(job_id: str, request: ChatRequest, db: Session = Depends(get_db)):
+    return _handle_chat(job_id, request, db)

@@ -1,5 +1,5 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { ChatMessage, IntakeJob } from '../../types';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import type { ChatMessage, IntakeJob } from '../../types';
 
 interface AiIntakeState {
   jobId: string | null;

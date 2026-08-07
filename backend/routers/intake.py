@@ -7,7 +7,7 @@ import logging
 import uuid
 from typing import AsyncGenerator, Optional, Dict, Any
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, UploadFile, Form
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -30,6 +30,7 @@ ALLOWED_EXTENSIONS = {".pdf", ".txt", ".docx", ".eml"}
 
 class PasteRequest(BaseModel):
     text: str
+    job_id: Optional[str] = None
 
 
 
@@ -43,6 +44,7 @@ class ChatRequest(BaseModel):
 def upload_complaint(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
+    job_id: Optional[str] = Form(None),
     db: Session = Depends(get_db),
 ):
     ext = os.path.splitext(file.filename or "")[1].lower()
@@ -56,8 +58,19 @@ def upload_complaint(
     if len(content) > max_bytes:
         raise AppValidationError(f"File exceeds {settings.MAX_UPLOAD_MB}MB limit")
 
-    job_id = str(uuid.uuid4())
-    job = intake_service.create_job(db, job_id=job_id, source_type="upload", source_filename=file.filename)
+    if job_id:
+        job = intake_repository.get_by_job_id(db, job_id)
+        if not job:
+            job = intake_service.create_job(db, job_id=job_id, source_type="upload", source_filename=file.filename)
+        else:
+            job.status = "pending"
+            job.progress_percent = 0
+            job.source_type = "upload"
+            job.source_filename = file.filename
+            db.commit()
+    else:
+        job_id = str(uuid.uuid4())
+        job = intake_service.create_job(db, job_id=job_id, source_type="upload", source_filename=file.filename)
 
     background_tasks.add_task(intake_service.run_pipeline, job_id=job_id, raw_bytes=content, filename=file.filename)
 
@@ -73,8 +86,19 @@ def paste_complaint(
     if not request.text.strip():
         raise AppValidationError("Text cannot be empty")
 
-    job_id = str(uuid.uuid4())
-    intake_service.create_job(db, job_id=job_id, source_type="paste")
+    job_id = request.job_id
+    if job_id:
+        job = intake_repository.get_by_job_id(db, job_id)
+        if not job:
+            intake_service.create_job(db, job_id=job_id, source_type="paste")
+        else:
+            job.status = "pending"
+            job.progress_percent = 0
+            job.source_type = "paste"
+            db.commit()
+    else:
+        job_id = str(uuid.uuid4())
+        intake_service.create_job(db, job_id=job_id, source_type="paste")
 
     background_tasks.add_task(intake_service.run_pipeline_text, job_id=job_id, text=request.text)
 

@@ -81,3 +81,19 @@ def test_chat_stateless_api():
         assert json_resp["intent"] == "qa"
         assert json_resp["response"] == "Hi there"
 
+def test_upload_existing_job():
+    post_data = {"text": "Test existing job upload"}
+    with patch("services.intake_service.run_pipeline_text") as mock_pipeline_text:
+        response = client.post("/api/v1/intake/paste", json=post_data)
+        assert response.status_code == 200
+        job_id = response.json()["job_id"]
+    
+    with patch("services.intake_service.run_pipeline") as mock_pipeline:
+        files = {"file": ("test.txt", b"Hello text upload content")}
+        data = {"job_id": job_id}
+        response = client.post("/api/v1/intake/upload", files=files, data=data)
+        assert response.status_code == 200
+        assert response.json()["job_id"] == job_id
+        
+        get_resp = client.get(f"/api/v1/intake/{job_id}")
+        assert get_resp.status_code == 200

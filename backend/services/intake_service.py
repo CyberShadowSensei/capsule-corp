@@ -89,8 +89,29 @@ def _run_graph(job_id: str, raw_text: str) -> None:
             )
             return
 
+        job = intake_repository.get_by_job_id(db, job_id)
+        existing_payload = job.extracted_payload or {} if job else {}
+        existing_mapped = existing_payload.get("mapped_complaint", {})
+        new_mapped = final_state.get("mapped_complaint") or {}
+
+        merged_mapped = dict(existing_mapped)
+        conflicts = []
+
+        for field, new_value in new_mapped.items():
+            old_value = existing_mapped.get(field)
+            if not old_value:
+                if new_value:
+                    merged_mapped[field] = new_value
+            elif old_value and new_value and old_value != new_value:
+                conflicts.append((field, old_value, new_value))
+
+        if conflicts and job:
+            for field, old_value, new_value in conflicts:
+                msg = f"I noticed the new document mentions {field} is {new_value}, but the form says {old_value}. Which should I keep?"
+                chat_repository.add_message(db, job_id=job_id, role="assistant", content=msg)
+
         payload = {
-            "mapped_complaint": final_state.get("mapped_complaint"),
+            "mapped_complaint": merged_mapped,
             "severity": final_state.get("severity"),
             "priority": final_state.get("priority"),
             "rationale": final_state.get("rationale"),

@@ -1,0 +1,77 @@
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+.field-label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.required {
+  color: var(--color-danger);
+}
+
+.ai-badge {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-ai-filled-label);
+  background: var(--color-ai-filled);
+  border: 1px solid var(--color-ai-filled-border);
+  border-radius: var(--radius-sm);
+  padding: 1px 5px;
+  letter-spacing: 0.04em;
+}
+
+.field-input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.field-input:hover {
+  border-color: var(--color-secondary);
+}
+
+.field-input:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(10, 88, 202, 0.15);
+}
+
+.field-input:disabled {
+  background-color: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+/* AI-filled state — the signature visual treatment */
+.ai-filled .field-input {
+  background-color: var(--color-ai-filled);
+  border-color: var(--color-ai-filled-border);
+}
+
+.ai-filled .field-input:focus {
+  border-color: var(--color-primary);
+  background-color: var(--color-bg);
+}
+
+.has-error .field-input {
+  border-color: var(--color-danger);
+}
+
+.field-error {
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+}

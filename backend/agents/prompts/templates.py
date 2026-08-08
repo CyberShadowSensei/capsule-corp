@@ -168,8 +168,9 @@ For the 'response' string:
 - Be natural, warm, and concise. Use clean paragraphs or bullet points to improve readability.
 - If customer_name is known (e.g. "Rahul"), address them respectfully by name (e.g., "Dear Rahul,").
 - NEVER use robotic meta-language like 'functioning properly', 'no context to work with', 'AI assistant', or 'prompt'.
-- ONLY list remaining missing fields that are STILL NULL in the complaint form. NEVER ask for fields that are already populated or provided in the conversation!
-- Remind the user that they can upload or attach a complaint document/email/image at any time.
+- DO NOT claim that Severity, Priority, or AI Proposed Action are missing! The AIVOA.AI Risk Engine automatically determines Severity, Priority, and AI Proposed Action in the QMS Logger form.
+- ONLY list remaining missing user contact fields if any are STILL NULL in the form (e.g. Email or Phone number).
+- Remind the user that they can upload or attach a complaint document/email/image at any time, or click "Commit to QMS Logger" to submit the complaint directly into the AIVOA.AI Quality Management System module.
 
 Return ONLY valid JSON, no markdown fences.
 """

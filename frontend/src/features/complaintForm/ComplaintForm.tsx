@@ -65,10 +65,13 @@ const ComplaintForm: React.FC = () => {
   return (
     <div className="complaint-form">
       <div className="form-header">
-        <h1 className="form-title">Log Customer Complaint</h1>
+        <div>
+          <h1 className="form-title">QMS Complaint Logger</h1>
+          <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: 600, letterSpacing: '0.04em' }}>AIVOA.AI Quality Management System</span>
+        </div>
         {savedId && (
           <span className="save-success" role="status">
-            Saved as Complaint #{savedId}
+            Committed to QMS #{savedId}
           </span>
         )}
       </div>
@@ -76,43 +79,43 @@ const ComplaintForm: React.FC = () => {
       <section className="form-section" aria-labelledby="section-customer">
         <h2 id="section-customer" className="section-heading">Customer Information</h2>
         <div className="field-row">
-          <TextField id="customer_name" label="Customer Name" value={f('customer_name')} onChange={set('customer_name')} aiFilled={ai('customer_name')} />
-          <TextField id="customer_email" label="Email" type="email" value={f('customer_email')} onChange={set('customer_email')} aiFilled={ai('customer_email')} />
+          <TextField id="customer_name" label="Customer Name" value={f('customer_name')} onChange={set('customer_name')} aiFilled={ai('customer_name')} disabled={true} />
+          <TextField id="customer_email" label="Email" type="email" value={f('customer_email')} onChange={set('customer_email')} aiFilled={ai('customer_email')} disabled={true} />
         </div>
         <div className="field-row">
-          <TextField id="company_name" label="Company / Organization" value={f('company_name')} onChange={set('company_name')} aiFilled={ai('company_name')} />
-          <TextField id="phone" label="Phone" type="tel" value={f('phone')} onChange={set('phone')} aiFilled={ai('phone')} />
+          <TextField id="company_name" label="Company / Organization" value={f('company_name')} onChange={set('company_name')} aiFilled={ai('company_name')} disabled={true} />
+          <TextField id="phone" label="Phone" type="tel" value={f('phone')} onChange={set('phone')} aiFilled={ai('phone')} disabled={true} />
         </div>
       </section>
 
       <section className="form-section" aria-labelledby="section-product">
         <h2 id="section-product" className="section-heading">Product Details</h2>
         <div className="field-row">
-          <TextField id="product_name" label="Product Name" value={f('product_name')} onChange={set('product_name')} aiFilled={ai('product_name')} />
-          <TextField id="batch_number" label="Batch Number" value={f('batch_number')} onChange={set('batch_number')} aiFilled={ai('batch_number')} />
+          <TextField id="product_name" label="Product Name" value={f('product_name')} onChange={set('product_name')} aiFilled={ai('product_name')} disabled={true} />
+          <TextField id="batch_number" label="Batch Number" value={f('batch_number')} onChange={set('batch_number')} aiFilled={ai('batch_number')} disabled={true} />
         </div>
         <div className="field-row">
-          <TextField id="manufacturing_date" label="Manufacturing Date" value={f('manufacturing_date')} onChange={set('manufacturing_date')} aiFilled={ai('manufacturing_date')} />
-          <TextField id="expiry_date" label="Expiry Date" value={f('expiry_date')} onChange={set('expiry_date')} aiFilled={ai('expiry_date')} />
+          <TextField id="manufacturing_date" label="Manufacturing Date" value={f('manufacturing_date')} onChange={set('manufacturing_date')} aiFilled={ai('manufacturing_date')} disabled={true} />
+          <TextField id="expiry_date" label="Expiry Date" value={f('expiry_date')} onChange={set('expiry_date')} aiFilled={ai('expiry_date')} disabled={true} />
         </div>
       </section>
 
       <section className="form-section" aria-labelledby="section-complaint">
         <h2 id="section-complaint" className="section-heading">Complaint Details</h2>
         <div className="field-row">
-          <TextField id="complaint_type" label="Complaint Type" value={f('complaint_type')} onChange={set('complaint_type')} aiFilled={ai('complaint_type')} />
-          <TextField id="date_of_complaint" label="Date of Complaint" value={f('date_of_complaint')} onChange={set('date_of_complaint')} aiFilled={ai('date_of_complaint')} />
+          <TextField id="complaint_type" label="Complaint Type" value={f('complaint_type')} onChange={set('complaint_type')} aiFilled={ai('complaint_type')} disabled={true} />
+          <TextField id="date_of_complaint" label="Date of Complaint" value={f('date_of_complaint')} onChange={set('date_of_complaint')} aiFilled={ai('date_of_complaint')} disabled={true} />
         </div>
-        <TextareaField id="complaint_description" label="Complaint Description" value={f('complaint_description')} onChange={set('complaint_description')} aiFilled={ai('complaint_description')} rows={5} required />
+        <TextareaField id="complaint_description" label="Complaint Description" value={f('complaint_description')} onChange={set('complaint_description')} aiFilled={ai('complaint_description')} rows={5} required disabled={true} />
       </section>
 
       <section className="form-section" aria-labelledby="section-risk">
         <h2 id="section-risk" className="section-heading">Risk Assessment</h2>
         <div className="field-row">
-          <SelectField id="severity" label="Severity" value={f('severity')} onChange={set('severity')} options={SEVERITY_OPTIONS} aiFilled={ai('severity')} />
-          <SelectField id="priority" label="Priority" value={f('priority')} onChange={set('priority')} options={PRIORITY_OPTIONS} aiFilled={ai('priority')} />
+          <SelectField id="severity" label="Severity" value={f('severity')} onChange={set('severity')} options={SEVERITY_OPTIONS} aiFilled={ai('severity')} disabled={true} />
+          <SelectField id="priority" label="Priority" value={f('priority')} onChange={set('priority')} options={PRIORITY_OPTIONS} aiFilled={ai('priority')} disabled={true} />
         </div>
-        <TextareaField id="ai_proposed_action" label="AI Proposed Action" value={f('ai_proposed_action')} onChange={set('ai_proposed_action')} aiFilled={ai('ai_proposed_action')} rows={3} />
+        <TextareaField id="ai_proposed_action" label="AI Proposed Action" value={f('ai_proposed_action')} onChange={set('ai_proposed_action')} aiFilled={ai('ai_proposed_action')} rows={3} disabled={true} />
       </section>
 
       {saveError && (
@@ -139,7 +142,7 @@ const ComplaintForm: React.FC = () => {
           disabled={isSaving}
           aria-busy={isSaving}
         >
-          {isSaving ? 'Saving...' : 'Save Complaint'}
+          {isSaving ? 'Logging to QMS...' : 'Commit to QMS Logger'}
         </button>
       </div>
     </div>

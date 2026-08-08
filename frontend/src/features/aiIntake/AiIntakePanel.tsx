@@ -145,7 +145,7 @@ const AiIntakePanel: React.FC = () => {
           dispatch(setJobId(data.job_id));
         }
 
-        if ((data.intent === 'log' || data.intent === 'edit') && data.fields) {
+        if (data.fields && Object.keys(data.fields).length > 0) {
           dispatch(applyAiFields(data.fields));
         }
         const bubbleContent = data.response || "I have processed your request, but couldn't generate a proper response. Please check the form to see the updates.";

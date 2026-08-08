@@ -225,8 +225,10 @@ def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] 
         logger.warning("Intent detection failed, defaulting to qa: %s", exc)
         intent = "qa"
 
-    # Step 2: if log or edit, extract structured fields
-    if intent in ("log", "edit"):
+    # Always extract fields if intent is log/edit OR if text contains complaint details (>40 chars or key terms)
+    should_extract = intent in ("log", "edit") or len(message) > 40 or any(k in message.lower() for k in ("batch", "product", "complaint", "tablet", "defect", "adverse", "hospital", "clinic", "pharmacy"))
+
+    if should_extract:
         extract_messages = [
             {"role": "user", "content": CHAT_EXTRACT_PROMPT.format(
                 existing_fields=json.dumps(existing_fields, indent=2),
@@ -239,7 +241,7 @@ def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] 
             extracted = json.loads(extract_raw)
         except Exception as exc:
             logger.warning("Field extraction failed in chat: %s", exc)
-            extracted = existing_fields
+            extracted = dict(existing_fields)
 
         # Post-processing normalization & state preservation
         if isinstance(extracted, dict):
@@ -250,9 +252,16 @@ def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] 
             for k, prev_val in existing_fields.items():
                 if prev_val and not extracted.get(k):
                     extracted[k] = prev_val
+                    
             name = extracted.get("customer_name")
             if isinstance(name, str) and name:
                 extracted["customer_name"] = name.title()
+
+            # Clean slash-concatenated names (take first clean entity)
+            for key_name in ("company_name", "product_name"):
+                val = extracted.get(key_name)
+                if isinstance(val, str) and "/" in val:
+                    extracted[key_name] = val.split("/")[0].strip()
 
         # Run risk assessment on the newly extracted fields
         risk_messages = [
@@ -263,9 +272,11 @@ def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] 
         try:
             risk_raw = chat_completion(risk_messages, model=PRIMARY_MODEL, response_format={"type": "json_object"})
             risk = json.loads(risk_raw)
-            if not extracted.get("severity") and risk.get("severity"):
+            
+            # Always assign risk assessment severity and priority if missing or unselected
+            if risk.get("severity"):
                 extracted["severity"] = risk.get("severity")
-            if not extracted.get("priority") and risk.get("priority"):
+            if risk.get("priority"):
                 extracted["priority"] = risk.get("priority")
             rationale = risk.get("rationale", "")
             if not extracted.get("ai_proposed_action") and risk.get("ai_proposed_action"):
@@ -278,6 +289,19 @@ def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] 
         except Exception as exc:
             logger.warning("Risk assessment failed in chat: %s", exc)
             rationale = ""
+
+        # Update database job payload with new extracted fields & risk levels
+        payload = {
+            "mapped_complaint": extracted,
+            "severity": extracted.get("severity"),
+            "priority": extracted.get("priority"),
+            "rationale": rationale,
+            "ai_proposed_action": extracted.get("ai_proposed_action"),
+            "ai_suggested_severity": extracted.get("ai_suggested_severity"),
+            "ai_suggested_priority": extracted.get("ai_suggested_priority"),
+            "ai_rationale": rationale
+        }
+        intake_repository.update_status(db, job_id, status="complete", progress_percent=100, extracted_payload=payload)
 
         response = extracted.pop("response", "I've updated the complaint details!")
         if isinstance(response, list):

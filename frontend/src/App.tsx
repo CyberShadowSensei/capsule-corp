@@ -42,8 +42,9 @@ const MainApp: React.FC = () => {
     
     // Fetch sessions
     fetch('/api/v1/intake/')
-      .then(res => res.json())
+      .then(res => (res.ok ? res.json() : null))
       .then(data => {
+        if (!data) return;
         if (data && data.jobs) {
           setSessions(data.jobs);
         } else if (Array.isArray(data)) {
@@ -57,17 +58,18 @@ const MainApp: React.FC = () => {
     if (jobId) {
       localStorage.setItem('currentJobId', jobId);
       fetch(`/api/v1/intake/${jobId}`)
-        .then(res => res.json())
+        .then(res => (res.ok ? res.json() : null))
         .then(data => {
+          if (!data) return;
           if (data.chat_messages && data.chat_messages.length > 0) {
             dispatch(setChatMessages(data.chat_messages));
             if (data.title) {
               dispatch({ type: 'aiIntake/updateJobState', payload: { title: data.title } });
             } else if (data.chat_messages.length > 2) {
               fetch(`/api/v1/intake/${jobId}/generate-title`, { method: 'POST' })
-                .then(r => r.json())
+                .then(r => (r.ok ? r.json() : null))
                 .then(tData => {
-                  if (tData.title) {
+                  if (tData && tData.title) {
                     dispatch({ type: 'aiIntake/updateJobState', payload: { title: tData.title } });
                     setSessions(prev => prev.map(s => s.job_id === jobId ? { ...s, title: tData.title } : s));
                   }

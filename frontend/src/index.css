@@ -5,33 +5,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap');
 
 :root {
-  /* Editorial Monolithic Dashboard palette */
-  --bg-main: #F4F4F2;
-  --panel-bg: #FFFFFF;
-  --border-grid-dark: #1A1A1A;
-
-  /* Color palette */
-  --color-primary: #1A1A1A;
-  --color-primary-hover: #000000;
-  --color-primary-subtle: #e8e8e8;
-  --color-secondary: #6C757D;
-  --color-bg: var(--panel-bg);
-  --color-surface: var(--bg-main);
-  --color-border: var(--border-grid-dark);
-  --color-text: #1A1A1A;
-  --color-text-muted: #495057;
-  --color-success: #1A1A1A;
-  --color-success-subtle: #e8e8e8;
-  --color-warning: #1A1A1A;
-  --color-warning-subtle: #e8e8e8;
-  --color-danger: #1A1A1A;
-  --color-danger-subtle: #e8e8e8;
-
-  /* AI-populated field indicator — the signature interaction treatment */
-  --color-ai-filled: #F4F4F2;
-  --color-ai-filled-border: #1A1A1A;
-  --color-ai-filled-label: #1A1A1A;
-
   /* Typography */
   --font-family: 'Space Mono', monospace;
   --font-heading: 'Syne', sans-serif;
@@ -60,6 +33,64 @@
   /* Shadows */
   --shadow-sm: none;
   --shadow-md: none;
+}
+
+:root, [data-theme="light"] {
+  /* Editorial Monolithic Dashboard palette - Light */
+  --bg-main: #F4F4F2;
+  --panel-bg: #FFFFFF;
+  --border-grid-dark: #1A1A1A;
+
+  /* Color palette */
+  --color-primary: #1A1A1A;
+  --color-primary-hover: #000000;
+  --color-primary-subtle: #e8e8e8;
+  --color-secondary: #6C757D;
+  --color-bg: var(--panel-bg);
+  --color-surface: var(--bg-main);
+  --color-border: var(--border-grid-dark);
+  --color-text: #1A1A1A;
+  --color-text-muted: #495057;
+  --color-success: #1A1A1A;
+  --color-success-subtle: #e8e8e8;
+  --color-warning: #1A1A1A;
+  --color-warning-subtle: #e8e8e8;
+  --color-danger: #1A1A1A;
+  --color-danger-subtle: #e8e8e8;
+
+  /* AI-populated field indicator */
+  --color-ai-filled: #F4F4F2;
+  --color-ai-filled-border: #1A1A1A;
+  --color-ai-filled-label: #1A1A1A;
+}
+
+[data-theme="dark"] {
+  /* Editorial Monolithic Dashboard palette - Dark */
+  --bg-main: #0F0F0F;
+  --panel-bg: #181818;
+  --border-grid-dark: #3A3A3A;
+
+  /* Color palette */
+  --color-primary: #F4F4F2;
+  --color-primary-hover: #FFFFFF;
+  --color-primary-subtle: #2A2A2A;
+  --color-secondary: #A0A0A0;
+  --color-bg: var(--panel-bg);
+  --color-surface: var(--bg-main);
+  --color-border: var(--border-grid-dark);
+  --color-text: #F4F4F2;
+  --color-text-muted: #A0A0A0;
+  --color-success: #F4F4F2;
+  --color-success-subtle: #2A2A2A;
+  --color-warning: #F4F4F2;
+  --color-warning-subtle: #2A2A2A;
+  --color-danger: #FF4D4F;
+  --color-danger-subtle: #3A1818;
+
+  /* AI-populated field indicator */
+  --color-ai-filled: #242424;
+  --color-ai-filled-border: #444444;
+  --color-ai-filled-label: #F4F4F2;
 }
 
 *,

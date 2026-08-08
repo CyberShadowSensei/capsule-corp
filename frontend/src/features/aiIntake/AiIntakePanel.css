@@ -21,6 +21,17 @@
   margin-bottom: var(--space-1);
 }
 
+.typewriter-text {
+  overflow: hidden;
+  white-space: nowrap;
+  animation: typewriter 2s steps(40, end);
+}
+
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
 .ai-panel-subtitle {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);

@@ -11,7 +11,7 @@ const ALLOWED_EXTS = ['.pdf', '.txt', '.docx', '.eml'];
 
 const AiIntakePanel: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { jobId, status, progressPercent, extractedPayload, errorMessage, chatMessages, isChatLoading, isExtractingDocument } =
+  const { jobId, title, status, progressPercent, extractedPayload, errorMessage, chatMessages, isChatLoading, isExtractingDocument } =
     useSelector((state: RootState) => state.aiIntake);
   const formFields = useSelector((state: RootState) => state.complaintForm.fields);
 
@@ -130,7 +130,7 @@ const AiIntakePanel: React.FC = () => {
   return (
     <div className="ai-panel">
       <div className="ai-panel-header">
-        <h2 className="ai-panel-title">AIVOA Copilot AI Assistant</h2>
+        <h2 className={`ai-panel-title ${title ? 'typewriter-text' : ''}`}>{title || 'AIVOA Copilot AI Assistant'}</h2>
         <p className="ai-panel-subtitle">
           Upload a document or chat. The assistant will extract and populate the form automatically.
         </p>

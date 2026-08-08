@@ -13,6 +13,7 @@ class IntakeJob(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
     job_id = Column(String, unique=True, nullable=False, index=True)
+    title = Column(String, nullable=True)
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
 

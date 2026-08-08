@@ -111,6 +111,7 @@ def get_all_jobs(db: Session = Depends(get_db)):
     return [
         {
             "job_id": job.job_id,
+            "title": job.title,
             "created_at": job.created_at,
             "status": job.status,
             "source_type": job.source_type,
@@ -128,12 +129,19 @@ def get_job(job_id: str, db: Session = Depends(get_db)):
     messages = chat_repository.get_by_job_id(db, job_id)
     return {
         "job_id": job.job_id,
+        "title": job.title,
         "status": job.status,
         "progress_percent": job.progress_percent,
         "extracted_payload": job.extracted_payload,
         "error_message": job.error_message,
         "chat_messages": [{"role": m.role, "content": m.content} for m in messages],
     }
+
+
+@router.post("/{job_id}/generate-title")
+def generate_title(job_id: str, db: Session = Depends(get_db)):
+    title = intake_service.generate_title(db, job_id)
+    return {"title": title}
 
 
 @router.get("/{job_id}/stream")

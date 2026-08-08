@@ -3,6 +3,7 @@ import type { ChatMessage, IntakeJob } from '../../types';
 
 interface AiIntakeState {
   jobId: string | null;
+  title: string | null;
   status: IntakeJob['status'] | null;
   progressPercent: number;
   extractedPayload: IntakeJob['extracted_payload'];
@@ -14,11 +15,12 @@ interface AiIntakeState {
 
 const initialState: AiIntakeState = {
   jobId: null,
+  title: null,
   status: null,
   progressPercent: 0,
   extractedPayload: null,
   errorMessage: null,
-  chatMessages: [],
+  chatMessages: [{ role: 'assistant', content: 'Hello! I am your AIVOA QA Copilot. I am here to help you log this complaint. You can upload a document, or tell me what happened in your own words.' }],
   isChatLoading: false,
   isExtractingDocument: false,
 };
@@ -47,6 +49,9 @@ const aiIntakeSlice = createSlice({
     addChatMessage(state, action: PayloadAction<ChatMessage>) {
       state.chatMessages.push(action.payload);
     },
+    setChatMessages(state, action: PayloadAction<ChatMessage[]>) {
+      state.chatMessages = action.payload;
+    },
     setChatLoading(state, action: PayloadAction<boolean>) {
       state.isChatLoading = action.payload;
     },
@@ -63,6 +68,7 @@ export const {
   setJobId,
   updateJobState,
   addChatMessage,
+  setChatMessages,
   setChatLoading,
   setExtractingDocument,
   resetIntake,

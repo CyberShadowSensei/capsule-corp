@@ -37,6 +37,7 @@ export type ComplaintUpdate = Partial<ComplaintCreate>;
 
 export interface IntakeJob {
   job_id: string;
+  title?: string;
   status: 'pending' | 'running' | 'complete' | 'error';
   progress_percent: number;
   extracted_payload: ExtractedPayload | null;

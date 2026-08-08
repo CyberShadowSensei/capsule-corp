@@ -29,8 +29,17 @@ def update_status(db: Session, job_id: str, status: str, progress_percent: int, 
     job.progress_percent = progress_percent
     if extracted_payload is not None:
         job.extracted_payload = extracted_payload
-    if error_message is not None:
-        job.error_message = error_message
+    job.error_message = error_message
+    db.commit()
+    db.refresh(job)
+    return job
+
+
+def update_title(db: Session, job_id: str, title: str) -> Optional[IntakeJob]:
+    job = get_by_job_id(db, job_id)
+    if job is None:
+        return None
+    job.title = title
     db.commit()
     db.refresh(job)
     return job

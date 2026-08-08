@@ -128,6 +128,8 @@ Return ONLY valid JSON, no markdown.
 CHAT_EXTRACT_PROMPT = """\
 You are a pharmaceutical QA complaint extraction assistant. Extract complaint information from the user message.
 
+Normalize and format the extracted data (e.g., proper casing for names like 'rohan' -> 'Rohan', standardized formatting for dates and phone numbers) before returning the JSON.
+
 Existing complaint fields (preserve any not mentioned in the message):
 {existing_fields}
 
@@ -138,4 +140,13 @@ Return a JSON object with all 14 fields plus a conversational response (use exis
 {{"customer_name": "string or null","customer_email": "string or null","company_name": "string or null","phone": "string or null","product_name": "string or null","batch_number": "string or null","manufacturing_date": "string or null","expiry_date": "string or null","complaint_description": "string or null","complaint_type": "string or null","date_of_complaint": "string or null","severity": "Critical | Major | Minor | null","priority": "High | Medium | Low | null","ai_proposed_action": "string or null","response": "string"}}
 
 Return ONLY valid JSON, no markdown fences.
+"""
+
+TITLE_GENERATION_PROMPT = """\
+You are an AI assistant. Read the following complaint conversation and generate a concise 3-5 word title summarizing the core issue.
+
+Conversation:
+{conversation}
+
+Return ONLY the title string, no quotes, no extra text.\
 """

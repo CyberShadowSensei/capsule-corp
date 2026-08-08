@@ -240,7 +240,8 @@ def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] 
                 "You are an AI assistant helping a pharmaceutical QA associate review a customer complaint. "
                 "Answer questions using only the complaint context provided. "
                 "If information is not in the context, say so. "
-                "AI responses may contain errors; always verify critical information."
+                "AI responses may contain errors; always verify critical information. "
+                "If the context is empty, proactively introduce yourself and guide the user."
             ),
         },
         {"role": "user", "content": f"Complaint context:\n{context_str}\n\nQuestion: {message}"},
@@ -248,3 +249,25 @@ def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] 
     response_text = chat_completion(qa_messages, model=PRIMARY_MODEL)
     chat_repository.add_message(db, job_id=job_id, role="assistant", content=response_text)
     return {"intent": "qa", "fields": None, "rationale": None, "response": response_text}
+
+
+def generate_title(db: Session, job_id: str) -> str:
+    from agents.prompts.templates import TITLE_GENERATION_PROMPT
+    from fastapi import HTTPException
+    
+    job = intake_repository.get_by_job_id(db, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+        
+    messages = chat_repository.get_by_job_id(db, job_id)
+    if not messages:
+        return "New Complaint"
+        
+    conversation = "\n".join([f"{m.role}: {m.content}" for m in messages])
+    
+    prompt = TITLE_GENERATION_PROMPT.format(conversation=conversation)
+    title = chat_completion([{"role": "user", "content": prompt}], model=PRIMARY_MODEL)
+    title = title.strip('\'"').strip()
+    
+    intake_repository.update_title(db, job_id, title)
+    return title

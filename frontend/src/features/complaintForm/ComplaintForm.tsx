@@ -7,6 +7,8 @@ import TextareaField from '../../components/ui/TextareaField/TextareaField';
 import SelectField from '../../components/ui/SelectField/SelectField';
 import './ComplaintForm.css';
 
+import { addChatMessage } from '../aiIntake/aiIntakeSlice';
+
 const SEVERITY_OPTIONS = [
   { label: 'Critical', value: 'Critical' },
   { label: 'Major', value: 'Major' },
@@ -24,6 +26,7 @@ const ComplaintForm: React.FC = () => {
   const { fields, aiFilled, isDirty, isSaving, saveError, savedId } = useSelector(
     (state: RootState) => state.complaintForm
   );
+  const { jobId } = useSelector((state: RootState) => state.aiIntake);
   const [confirmReset, setConfirmReset] = useState(false);
 
   const f = (key: keyof typeof fields) => fields[key] as string ?? '';
@@ -35,10 +38,15 @@ const ComplaintForm: React.FC = () => {
     dispatch(setSaving(true));
     dispatch(setSaveError(null));
     try {
+      const payload = {
+        ...fields,
+        job_id: jobId || undefined,
+        status: 'committed',
+      };
       const response = await fetch('/api/v1/complaints/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(fields),
+        body: JSON.stringify(payload),
       });
       if (!response.ok) {
         const err = await response.json();
@@ -46,8 +54,13 @@ const ComplaintForm: React.FC = () => {
       }
       const data = await response.json();
       dispatch(setSavedId(data.id));
+      dispatch(addChatMessage({
+        role: 'assistant',
+        content: `Complaint #QMS-${data.id} has been officially committed to the AIVOA.AI Quality Management System (QMS Logger) database.`,
+        intent: 'log',
+      }));
     } catch (err: unknown) {
-      dispatch(setSaveError(err instanceof Error ? err.message : 'Save failed'));
+      dispatch(setSaveError(err instanceof Error ? err.message : 'Failed to commit complaint to QMS database'));
     } finally {
       dispatch(setSaving(false));
     }

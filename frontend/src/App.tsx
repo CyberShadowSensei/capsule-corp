@@ -5,6 +5,7 @@ import ComplaintForm from './features/complaintForm/ComplaintForm';
 import AiIntakePanel from './features/aiIntake/AiIntakePanel';
 import { setJobId, resetIntake, setChatMessages } from './features/aiIntake/aiIntakeSlice';
 import { applyAiFields } from './features/complaintForm/complaintFormSlice';
+import QmsDatabaseModal from './features/qmsDatabase/QmsDatabaseModal';
 import './App.css';
 
 const MainApp: React.FC = () => {
@@ -12,6 +13,7 @@ const MainApp: React.FC = () => {
   const { jobId, title: reduxTitle } = useSelector((state: RootState) => state.aiIntake);
   const [sessions, setSessions] = useState<{job_id: string, created_at: string, title?: string}[]>([]);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isQmsModalOpen, setIsQmsModalOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     return (localStorage.getItem('appTheme') as 'light' | 'dark') || 'light';
   });
@@ -100,14 +102,12 @@ const MainApp: React.FC = () => {
   const handleDeleteSession = async () => {
     if (!jobId) return;
     try {
-      const res = await fetch(`/api/v1/intake/${jobId}`, { method: 'DELETE' });
-      if (res.ok) {
-        setSessions(prev => prev.filter(s => s.job_id !== jobId));
-        handleNewComplaint();
-      }
+      await fetch(`/api/v1/intake/${jobId}`, { method: 'DELETE' }).catch(() => {});
     } catch (err) {
       console.error("Error deleting session:", err);
     } finally {
+      setSessions(prev => prev.filter(s => s.job_id !== jobId));
+      handleNewComplaint();
       setIsConfirmingDelete(false);
     }
   };
@@ -119,6 +119,25 @@ const MainApp: React.FC = () => {
           <span className="app-logo">AIVOA.AI</span>
           <span className="app-header-subtitle">Pharmaceutical Complaint Management</span>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <button
+              onClick={() => setIsQmsModalOpen(true)}
+              style={{
+                padding: '4px 12px',
+                cursor: 'pointer',
+                borderRadius: '0',
+                border: '1px solid #52c41a',
+                background: 'rgba(82, 196, 26, 0.12)',
+                color: '#52c41a',
+                fontFamily: 'var(--font-family)',
+                fontSize: '13px',
+                fontWeight: 'bold',
+                letterSpacing: '0.04em',
+                transition: 'all 0.15s ease'
+              }}
+              title="View Filed QMS Complaints"
+            >
+              [ QMS DATABASE ]
+            </button>
             <button
               onClick={toggleTheme}
               style={{
@@ -172,6 +191,7 @@ const MainApp: React.FC = () => {
           <AiIntakePanel />
         </div>
       </main>
+      <QmsDatabaseModal isOpen={isQmsModalOpen} onClose={() => setIsQmsModalOpen(false)} />
     </div>
   );
 };

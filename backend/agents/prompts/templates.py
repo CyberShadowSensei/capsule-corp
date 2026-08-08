@@ -3,20 +3,20 @@ You are a pharmaceutical QA complaint extraction assistant. Extract all availabl
 
 Schema:
 {{
-  "customer_name": "string or null",
-  "customer_email": "string or null",
-  "company_name": "string or null",
-  "phone": "string or null",
-  "product_name": "string or null",
-  "batch_number": "string or null",
-  "manufacturing_date": "string or null",
-  "expiry_date": "string or null",
-  "complaint_description": "string or null",
-  "complaint_type": "string or null",
-  "date_of_complaint": "string or null",
-  "severity": "Critical | Major | Minor | null",
-  "priority": "High | Medium | Low | null",
-  "ai_proposed_action": "string or null"
+  "customer_name": null, // replace with string if known
+  "customer_email": null, // replace with string if known
+  "company_name": null, // replace with string if known
+  "phone": null, // replace with string if known
+  "product_name": null, // replace with string if known
+  "batch_number": null, // replace with string if known
+  "manufacturing_date": null, // replace with string if known
+  "expiry_date": null, // replace with string if known
+  "complaint_description": null, // replace with string if known
+  "complaint_type": null, // replace with string if known
+  "date_of_complaint": null, // replace with string if known
+  "severity": null, // Critical | Major | Minor | null
+  "priority": null, // High | Medium | Low | null
+  "ai_proposed_action": null // replace with string if known
 }}
 
 Rules:
@@ -128,7 +128,12 @@ Return ONLY valid JSON, no markdown.
 CHAT_EXTRACT_PROMPT = """\
 You are a pharmaceutical QA complaint extraction assistant. Extract complaint information from the user message.
 
-Normalize and format the extracted data (e.g., proper casing for names like 'rohan' -> 'Rohan', standardized formatting for dates and phone numbers) before returning the JSON.
+CRITICAL DATA RULES:
+- Normalize and format the extracted data (e.g., proper casing for names like 'rohan' -> 'Rohan', standardized formatting for dates and phone numbers).
+- If the user states their name (e.g., "my name is X", "I am X"), ALWAYS extract it into customer_name.
+- If a pharmacy, retailer, or manufacturer is mentioned (e.g., "Apollo Pharmacy", "Pfizer"), extract it into company_name.
+- Extract ONLY the product that is the subject of the complaint. Ignore competitor brands or comparison products mentioned in passing (e.g., "I usually take Benadryl, but your Cough Syrup was discolored" -> product_name is "Cough Syrup", NOT "Benadryl Cough Syrup").
+- NEVER populate structured fields with ambiguous or relative input (e.g., "6 months ago", "recently"). If a date or value is relative, leave the structured field as null and politely ask the user for the exact date/value in your response.
 
 Existing complaint fields (preserve any not mentioned in the message):
 {existing_fields}
@@ -137,7 +142,29 @@ User message:
 {message}
 
 Return a JSON object with all 14 fields plus a conversational response (use existing values for fields not mentioned, null for unknown):
-{{"customer_name": "string or null","customer_email": "string or null","company_name": "string or null","phone": "string or null","product_name": "string or null","batch_number": "string or null","manufacturing_date": "string or null","expiry_date": "string or null","complaint_description": "string or null","complaint_type": "string or null","date_of_complaint": "string or null","severity": "Critical | Major | Minor | null","priority": "High | Medium | Low | null","ai_proposed_action": "string or null","response": "string"}}
+{{
+  "customer_name": null,
+  "customer_email": null,
+  "company_name": null,
+  "phone": null,
+  "product_name": null,
+  "batch_number": null,
+  "manufacturing_date": null,
+  "expiry_date": null,
+  "complaint_description": null,
+  "complaint_type": null,
+  "date_of_complaint": null,
+  "severity": null,
+  "priority": null,
+  "ai_proposed_action": null,
+  "response": "string"
+}}
+
+For the 'response' string: 
+- Be conversational but well-structured. Use paragraphs, bullet points, or numbered lists (with \n newlines) to improve readability.
+- Acknowledge the user's input with reassurance. 
+- List ALL the remaining missing fields needed to complete the form. 
+- Also, remind the user that they can choose to upload or attach their complaint document instead of typing it all out.
 
 Return ONLY valid JSON, no markdown fences.
 """

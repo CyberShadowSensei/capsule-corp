@@ -60,6 +60,21 @@ def _extract_text(raw_bytes: bytes, filename: str) -> str:
                 parts.append(part.get_payload(decode=True).decode("utf-8", errors="replace"))
         return "\n".join(parts)
 
+    if ext in (".png", ".jpg", ".jpeg"):
+        try:
+            import easyocr
+            # Note: easyocr.Reader(['en']) downloads models on first run if missing
+            reader = easyocr.Reader(['en'])
+            # easyocr can read directly from bytes
+            result = reader.readtext(raw_bytes, detail=0)
+            return "\n".join(result)
+        except ImportError:
+            logger.warning("easyocr not installed, unable to perform OCR")
+            return "OCR dependencies (easyocr) are missing."
+        except Exception as e:
+            logger.error("OCR failed: %s", e)
+            return f"OCR Extraction Failed: {e}"
+
     return raw_bytes.decode("utf-8", errors="replace")
 
 
@@ -140,16 +155,30 @@ def _run_graph(job_id: str, raw_text: str) -> None:
         db.close()
 
 
-def run_pipeline(job_id: str, raw_bytes: bytes, filename: str) -> None:
+def run_pipeline(job_id: str, raw_bytes: bytes, filename: str, user_message: Optional[str] = None) -> None:
+    db = SessionLocal()
+    try:
+        display_msg = f"{user_message}\n[Attached: {filename}]" if user_message else f"[Uploaded document: {filename}]"
+        chat_repository.add_message(db, job_id=job_id, role="user", content=display_msg)
+    finally:
+        db.close()
+
     raw_text = _extract_text(raw_bytes, filename)
     _run_graph(job_id, raw_text)
+    
+    if user_message:
+        db2 = SessionLocal()
+        try:
+            chat(db2, job_id, user_message, insert_user_message=False)
+        finally:
+            db2.close()
 
 
 def run_pipeline_text(job_id: str, text: str) -> None:
     _run_graph(job_id, text)
 
 
-def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] = None) -> dict:
+def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] = None, insert_user_message: bool = True) -> dict:
     """
     Handle a chat message. Detects intent (log / edit / qa) and returns structured fields
     when the user is logging or editing a complaint, plain response otherwise.
@@ -165,7 +194,8 @@ def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] 
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Job not found")
 
-    chat_repository.add_message(db, job_id=job_id, role="user", content=message)
+    if insert_user_message:
+        chat_repository.add_message(db, job_id=job_id, role="user", content=message)
 
     existing_payload = job.extracted_payload or {}
     existing_fields = existing_payload.get("mapped_complaint") or current_fields or {}
@@ -200,6 +230,15 @@ def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] 
             logger.warning("Field extraction failed in chat: %s", exc)
             extracted = existing_fields
 
+        # Post-processing normalization
+        if isinstance(extracted, dict):
+            for k, v in list(extracted.items()):
+                if isinstance(v, str) and v.strip().lower() in ("null", "none", "string or null"):
+                    extracted[k] = None
+            name = extracted.get("customer_name")
+            if isinstance(name, str) and name:
+                extracted["customer_name"] = name.title()
+
         # Run risk assessment on the newly extracted fields
         risk_messages = [
             {"role": "user", "content": RISK_ASSESSMENT_PROMPT.format(
@@ -209,10 +248,13 @@ def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] 
         try:
             risk_raw = chat_completion(risk_messages, model=PRIMARY_MODEL, response_format={"type": "json_object"})
             risk = json.loads(risk_raw)
-            extracted["severity"] = risk.get("severity", extracted.get("severity"))
-            extracted["priority"] = risk.get("priority", extracted.get("priority"))
+            if not extracted.get("severity") and risk.get("severity"):
+                extracted["severity"] = risk.get("severity")
+            if not extracted.get("priority") and risk.get("priority"):
+                extracted["priority"] = risk.get("priority")
             rationale = risk.get("rationale", "")
-            extracted["ai_proposed_action"] = risk.get("ai_proposed_action", extracted.get("ai_proposed_action"))
+            if not extracted.get("ai_proposed_action") and risk.get("ai_proposed_action"):
+                extracted["ai_proposed_action"] = risk.get("ai_proposed_action")
             
             # Audit trail
             extracted["ai_suggested_severity"] = risk.get("severity")
@@ -223,6 +265,11 @@ def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] 
             rationale = ""
 
         response = extracted.pop("response", "I've updated the complaint details!")
+        if isinstance(response, list):
+            response = "\n\n".join(str(item) for item in response)
+        elif not isinstance(response, str):
+            response = str(response)
+
         chat_repository.add_message(db, job_id=job_id, role="assistant", content=response)
         
         return {

@@ -161,10 +161,12 @@ Return a JSON object with all 14 fields plus a conversational response (use exis
 }}
 
 For the 'response' string: 
-- Be conversational but well-structured. Use paragraphs, bullet points, or numbered lists (with \n newlines) to improve readability.
+- Be natural, warm, and concise. Use clean paragraphs or bullet points to improve readability.
+- NEVER use robotic meta-language like 'functioning properly', 'no context to work with', 'AI assistant', or 'prompt'.
+- NEVER misspell or guess user names; if greeting, use exact spelling or a friendly neutral greeting.
 - Acknowledge the user's input with reassurance. 
-- List ALL the remaining missing fields needed to complete the form. 
-- Also, remind the user that they can choose to upload or attach their complaint document instead of typing it all out.
+- List any remaining critical missing fields needed to complete the form. 
+- Remind the user that they can upload or attach a complaint document/email/image at any time.
 
 Return ONLY valid JSON, no markdown fences.
 """

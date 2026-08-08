@@ -294,14 +294,15 @@ def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] 
         {
             "role": "system",
             "content": (
-                "You are an AI assistant helping a pharmaceutical QA associate review a customer complaint. "
-                "Answer questions using only the complaint context provided. "
-                "If information is not in the context, say so. "
-                "AI responses may contain errors; always verify critical information. "
-                "If the context is empty, proactively introduce yourself and guide the user."
+                "You are AIVOA Copilot, a professional Pharmaceutical Quality Assurance assistant. "
+                "Communicate naturally, warmly, and concisely (1-3 sentences max). "
+                "NEVER use robotic meta-language like 'functioning properly', 'no context to work with', 'AI assistant', 'system', or 'prompt'. "
+                "NEVER misspell or invent user names; if greeting a user, use their exact spelled name if provided, or simply greet them warmly without guessing names. "
+                "If no complaint details exist yet, welcome the user warmly and invite them to share their complaint details or attach a document/email. "
+                "If complaint details exist, answer questions directly and professionally based on the available complaint information."
             ),
         },
-        {"role": "user", "content": f"Complaint context:\n{context_str}\n\nQuestion: {message}"},
+        {"role": "user", "content": f"Complaint details:\n{context_str}\n\nUser message: {message}"},
     ]
     response_text = chat_completion(qa_messages, model=PRIMARY_MODEL)
     chat_repository.add_message(db, job_id=job_id, role="assistant", content=response_text)

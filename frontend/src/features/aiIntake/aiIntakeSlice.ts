@@ -9,7 +9,7 @@ interface AiIntakeState {
   errorMessage: string | null;
   chatMessages: ChatMessage[];
   isChatLoading: boolean;
-  activeTab: 'upload' | 'paste' | 'chat';
+  isExtractingDocument: boolean;
 }
 
 const initialState: AiIntakeState = {
@@ -20,7 +20,7 @@ const initialState: AiIntakeState = {
   errorMessage: null,
   chatMessages: [],
   isChatLoading: false,
-  activeTab: 'upload',
+  isExtractingDocument: false,
 };
 
 const aiIntakeSlice = createSlice({
@@ -41,6 +41,9 @@ const aiIntakeSlice = createSlice({
       if (progress_percent !== undefined) state.progressPercent = progress_percent;
       if (extracted_payload !== undefined) state.extractedPayload = extracted_payload;
       if (error_message !== undefined) state.errorMessage = error_message;
+      if (status === 'complete' || status === 'error') {
+        state.isExtractingDocument = false;
+      }
     },
     addChatMessage(state, action: PayloadAction<ChatMessage>) {
       state.chatMessages.push(action.payload);
@@ -48,8 +51,8 @@ const aiIntakeSlice = createSlice({
     setChatLoading(state, action: PayloadAction<boolean>) {
       state.isChatLoading = action.payload;
     },
-    setActiveTab(state, action: PayloadAction<AiIntakeState['activeTab']>) {
-      state.activeTab = action.payload;
+    setExtractingDocument(state, action: PayloadAction<boolean>) {
+      state.isExtractingDocument = action.payload;
     },
     resetIntake() {
       return initialState;
@@ -62,7 +65,7 @@ export const {
   updateJobState,
   addChatMessage,
   setChatLoading,
-  setActiveTab,
+  setExtractingDocument,
   resetIntake,
 } = aiIntakeSlice.actions;
 

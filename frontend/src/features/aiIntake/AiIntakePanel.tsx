@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '../../store';
-import { setJobId, addChatMessage, setChatLoading } from './aiIntakeSlice';
+import { setJobId, addChatMessage, setChatLoading, setExtractingDocument } from './aiIntakeSlice';
 import { useIntakeStream } from './useIntakeStream';
 import { applyAiFields } from '../complaintForm/complaintFormSlice';
 import ProgressBar from '../../components/ui/ProgressBar/ProgressBar';
@@ -11,13 +11,12 @@ const ALLOWED_EXTS = ['.pdf', '.txt', '.docx', '.eml'];
 
 const AiIntakePanel: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { jobId, status, progressPercent, extractedPayload, errorMessage, chatMessages, isChatLoading } =
+  const { jobId, status, progressPercent, extractedPayload, errorMessage, chatMessages, isChatLoading, isExtractingDocument } =
     useSelector((state: RootState) => state.aiIntake);
   const formFields = useSelector((state: RootState) => state.complaintForm.fields);
 
   const [chatInput, setChatInput] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadError, setUploadError] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -29,15 +28,14 @@ const AiIntakePanel: React.FC = () => {
     if (file) {
       const ext = '.' + file.name.split('.').pop()?.toLowerCase();
       if (!ALLOWED_EXTS.includes(ext)) {
-        setUploadError(`File type not supported. Allowed: ${ALLOWED_EXTS.join(', ')}`);
+        dispatch(addChatMessage({ role: 'system', intent: 'error', content: `File type not supported. Allowed: ${ALLOWED_EXTS.join(', ')}` }));
         return;
       }
       if (file.size > 10 * 1024 * 1024) {
-        setUploadError('File exceeds 10MB limit');
+        dispatch(addChatMessage({ role: 'system', intent: 'error', content: 'File exceeds 10MB limit' }));
         return;
       }
       setSelectedFile(file);
-      setUploadError(null);
     }
   };
 
@@ -56,8 +54,8 @@ const AiIntakePanel: React.FC = () => {
 
     // Step 1: Upload file if present
     if (selectedFile) {
-      setUploadError(null);
       dispatch(setChatLoading(true));
+      dispatch(setExtractingDocument(true));
       try {
         const fd = new FormData();
         fd.append('file', selectedFile);
@@ -82,8 +80,9 @@ const AiIntakePanel: React.FC = () => {
         }
         removeFile();
       } catch (err: unknown) {
-        setUploadError(err instanceof Error ? err.message : 'Upload failed');
+        dispatch(addChatMessage({ role: 'system', intent: 'error', content: "I'm having trouble connecting to the server. Please check your connection." }));
         dispatch(setChatLoading(false));
+        dispatch(setExtractingDocument(false));
         return; 
       }
     }
@@ -115,7 +114,7 @@ const AiIntakePanel: React.FC = () => {
         const bubbleContent = data.response || 'No response.';
         dispatch(addChatMessage({ role: 'assistant', content: bubbleContent, intent: data.intent ?? 'qa' }));
       } catch {
-        dispatch(addChatMessage({ role: 'assistant', content: 'Failed to get a response. Please try again.', intent: 'qa' }));
+        dispatch(addChatMessage({ role: 'system', intent: 'error', content: "I'm having trouble connecting to the server. Please check your connection." }));
       } finally {
         dispatch(setChatLoading(false));
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
@@ -139,7 +138,7 @@ const AiIntakePanel: React.FC = () => {
 
       <div className="ai-panel-body">
         <div className="chat-panel" id="panel-chat">
-          {isProcessing && (
+          {isProcessing && isExtractingDocument && (
             <div className="progress-section">
               <ProgressBar percent={progressPercent} label="Extracting..." />
             </div>
@@ -164,7 +163,7 @@ const AiIntakePanel: React.FC = () => {
             )}
             {chatMessages.map((msg: any, i: number) => (
               <div key={i} className={`chat-bubble ${msg.role}`}>
-                <span className="bubble-role">{msg.role === 'user' ? 'You' : 'Copilot'}</span>
+                <span className="bubble-role">{msg.role === 'user' ? 'You' : msg.role === 'system' ? 'System' : 'Copilot'}</span>
                 {msg.role === 'assistant' && (msg.intent === 'log' || msg.intent === 'edit') && (
                   <span className="intent-badge">Form updated</span>
                 )}
@@ -183,8 +182,6 @@ const AiIntakePanel: React.FC = () => {
           <div className="chat-disclaimer">
             AI responses may contain errors. Always verify critical information before submitting.
           </div>
-
-          {uploadError && <p className="panel-error input-error" role="alert">{uploadError}</p>}
 
           <div className="chat-input-container">
             {selectedFile && (

@@ -55,7 +55,7 @@ export interface ExtractedPayload {
 }
 
 export interface ChatMessage {
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'system';
   content: string;
-  intent?: 'log' | 'edit' | 'qa';
+  intent?: 'log' | 'edit' | 'qa' | 'error';
 }

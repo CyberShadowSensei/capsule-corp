@@ -33,7 +33,6 @@ const aiIntakeSlice = createSlice({
       state.progressPercent = 0;
       state.extractedPayload = null;
       state.errorMessage = null;
-      state.chatMessages = [];
     },
     updateJobState(state, action: PayloadAction<Partial<IntakeJob>>) {
       const { status, progress_percent, extracted_payload, error_message } = action.payload;

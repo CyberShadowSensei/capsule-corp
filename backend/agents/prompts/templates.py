@@ -126,19 +126,23 @@ Return ONLY valid JSON, no markdown.
 """
 
 CHAT_EXTRACT_PROMPT = """\
-You are a pharmaceutical QA complaint extraction assistant. Extract complaint information from the user message.
+You are a pharmaceutical QA complaint extraction assistant. Extract complaint information by analyzing the FULL CONVERSATION HISTORY and the latest user message.
 
 CRITICAL DATA RULES:
-- Normalize and format the extracted data (e.g., proper casing for names like 'rohan' -> 'Rohan', standardized formatting for dates and phone numbers).
-- If the user states their name (e.g., "my name is X", "I am X"), ALWAYS extract it into customer_name.
-- If a pharmacy, retailer, or manufacturer is mentioned (e.g., "Apollo Pharmacy", "Pfizer"), extract it into company_name.
-- Extract ONLY the product that is the subject of the complaint. Ignore competitor brands or comparison products mentioned in passing (e.g., "I usually take Benadryl, but your Cough Syrup was discolored" -> product_name is "Cough Syrup", NOT "Benadryl Cough Syrup").
-- NEVER populate structured fields with ambiguous or relative input (e.g., "6 months ago", "recently"). If a date or value is relative, leave the structured field as null and politely ask the user for the exact date/value in your response.
+- PRESERVE POPULATED FIELDS: If a field is already populated in `existing_fields` (e.g. customer_name: "Rahul"), DO NOT overwrite it with null unless the user explicitly requested a change.
+- USER NAME EXTRACTION: If the user states their name anywhere in the conversation (e.g., "my name is X", "I am X"), ALWAYS extract it into customer_name.
+- COMPANY / HOSPITAL / CLINIC EXTRACTION: If a hospital, pharmacy, clinic, or medical center is mentioned (e.g., "Apollo Pharmacy", "City General Hospital", "Regional Medical Center"), extract it into company_name if not already set.
+- PRODUCT ISOLATION: Extract ONLY the product that is the subject of the complaint (e.g. "AtorShield 20" or "Atorvastatin Calcium Tablets 20mg"). Ignore competitor brands or comparison products mentioned in passing.
+- DATE EXTRACTION: If explicit dates or date ranges are mentioned (e.g. "2026-07-18 to 2026-07-21"), extract the primary date (e.g. "2026-07-18") into date_of_complaint. For manufacturing/expiry dates, extract into manufacturing_date/expiry_date.
+- NEVER populate structured fields with ambiguous or relative input (e.g. "6 months ago"). Leave relative values as null.
 
-Existing complaint fields (preserve any not mentioned in the message):
+Existing complaint fields:
 {existing_fields}
 
-User message:
+Full Conversation History:
+{history}
+
+Latest User Message:
 {message}
 
 Return a JSON object with all 14 fields plus a conversational response (use existing values for fields not mentioned, null for unknown):
@@ -162,10 +166,9 @@ Return a JSON object with all 14 fields plus a conversational response (use exis
 
 For the 'response' string: 
 - Be natural, warm, and concise. Use clean paragraphs or bullet points to improve readability.
+- If customer_name is known (e.g. "Rahul"), address them respectfully by name (e.g., "Dear Rahul,").
 - NEVER use robotic meta-language like 'functioning properly', 'no context to work with', 'AI assistant', or 'prompt'.
-- NEVER misspell or guess user names; if greeting, use exact spelling or a friendly neutral greeting.
-- Acknowledge the user's input with reassurance. 
-- List any remaining critical missing fields needed to complete the form. 
+- ONLY list remaining missing fields that are STILL NULL in the complaint form. NEVER ask for fields that are already populated or provided in the conversation!
 - Remind the user that they can upload or attach a complaint document/email/image at any time.
 
 Return ONLY valid JSON, no markdown fences.

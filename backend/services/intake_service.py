@@ -207,6 +207,10 @@ def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] 
     existing_fields = existing_payload.get("mapped_complaint") or current_fields or {}
     context_str = json.dumps(existing_payload, indent=2)
 
+    # Fetch full chronological conversation history for complete memory
+    history_messages = chat_repository.get_by_job_id(db, job_id=job_id)
+    history_str = "\n".join([f"{m.role.upper()}: {m.content}" for m in history_messages])
+
     # Step 1: detect intent
     intent_messages = [
         {"role": "user", "content": INTENT_DETECTION_PROMPT.format(
@@ -226,6 +230,7 @@ def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] 
         extract_messages = [
             {"role": "user", "content": CHAT_EXTRACT_PROMPT.format(
                 existing_fields=json.dumps(existing_fields, indent=2),
+                history=history_str,
                 message=message,
             )}
         ]
@@ -236,11 +241,15 @@ def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] 
             logger.warning("Field extraction failed in chat: %s", exc)
             extracted = existing_fields
 
-        # Post-processing normalization
+        # Post-processing normalization & state preservation
         if isinstance(extracted, dict):
             for k, v in list(extracted.items()):
                 if isinstance(v, str) and v.strip().lower() in ("null", "none", "string or null"):
                     extracted[k] = None
+            # Fallback merging: retain existing fields if current extraction is None
+            for k, prev_val in existing_fields.items():
+                if prev_val and not extracted.get(k):
+                    extracted[k] = prev_val
             name = extracted.get("customer_name")
             if isinstance(name, str) and name:
                 extracted["customer_name"] = name.title()
@@ -302,7 +311,7 @@ def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] 
                 "If complaint details exist, answer questions directly and professionally based on the available complaint information."
             ),
         },
-        {"role": "user", "content": f"Complaint details:\n{context_str}\n\nUser message: {message}"},
+        {"role": "user", "content": f"Full Conversation History:\n{history_str}\n\nComplaint details:\n{context_str}\n\nUser message: {message}"},
     ]
     response_text = chat_completion(qa_messages, model=PRIMARY_MODEL)
     chat_repository.add_message(db, job_id=job_id, role="assistant", content=response_text)

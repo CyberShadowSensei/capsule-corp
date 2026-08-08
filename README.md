@@ -1,63 +1,156 @@
-# AIVOA.AI - Pharma QA Complaint Management System
+# AIVOA.AI - Pharmaceutical QA Complaint Management Platform
 
-AIVOA.AI is an AI-powered Quality Assurance (QA) Complaint Management System designed for the pharmaceutical industry. It streamlines the process of logging, tracking, and analyzing product complaints using generative AI.
+AIVOA.AI is an enterprise-grade Quality Assurance (QA) Complaint Management Platform designed specifically for the pharmaceutical industry. It automates the intake, data extraction, risk classification, root cause analysis, and CAPA (Corrective and Preventive Actions) recommendations for customer product complaints using generative AI and LangGraph state orchestration.
 
-## Architecture
+---
 
-The system consists of a FastAPI backend and a React (Vite) frontend. The backend utilizes LangGraph for orchestration and Groq for LLM inference.
+## Architectural Workflow & System Diagram
+
+The system combines a React (Vite) Redux frontend adhering to Editorial Monolithic aesthetics with a FastAPI backend powered by LangGraph node workflows, EasyOCR image processing, and Groq LLM inference (`llama-3.1-8b-instant`).
 
 ```mermaid
-graph TD
-    subgraph Frontend [React + Vite]
-        UI[User Interface]
-        ChatPanel[AI Chat Panel]
-        ComplaintForm[Complaint Form]
+flowchart TD
+    subgraph Client ["Frontend (React + Redux Toolkit)"]
+        UI["Editorial Monolithic Shell"]
+        Theme["Dark / Light Theme System"]
+        SessionSelect["Session History Selector"]
+        Form["Complaint Form Matrix"]
+        Chat["AI QA Copilot Panel"]
     end
 
-    subgraph Backend [FastAPI]
-        API[API Routers]
-        Services[Business Logic Services]
-        LangGraph[LangGraph Pipeline]
-        LLM[Groq LLM Client]
-        DB[(SQLite Database)]
+    subgraph API ["FastAPI Router Layer"]
+        UploadEP["POST /api/v1/intake/upload"]
+        ChatEP["POST /api/v1/intake/chat"]
+        TitleEP["POST /api/v1/intake/{id}/generate-title"]
+        DeleteEP["DELETE /api/v1/intake/{id}"]
     end
 
-    UI --> API
-    ChatPanel --> API
-    ComplaintForm --> API
+    subgraph Core ["Extraction & Processing Engine"]
+        OCR["EasyOCR Engine (Image to Text)"]
+        Parsers["Doc Parsers (PDF, DOCX, TXT, EML)"]
+        Graph["LangGraph Pipeline"]
+    end
 
-    API --> Services
-    Services --> LangGraph
-    Services --> DB
+    subgraph LangGraphState ["LangGraph State Nodes"]
+        N1["1. Extract Fields"]
+        N2["2. Validate Completeness"]
+        N3["3. Risk Assessment"]
+        N4["4. Summary & Root Cause"]
+        N5["5. CAPA Generator"]
+        N1 --> N2 --> N3 --> N4 --> N5
+    end
 
-    LangGraph <--> LLM
+    subgraph Data ["Persistence & Inference"]
+        Groq["Groq API (Llama 3.1 8B)"]
+        DB[("SQLite Database")]
+    end
+
+    UI --> Theme
+    SessionSelect --> ChatEP
+    Form --> ChatEP
+    Chat --> UploadEP
+    Chat --> ChatEP
+
+    UploadEP --> Parsers
+    UploadEP --> OCR
+    Parsers --> Graph
+    OCR --> Graph
+    ChatEP --> Groq
+
+    Graph --> LangGraphState
+    LangGraphState <--> Groq
+    
+    API --> DB
+    TitleEP --> Groq
+    TitleEP --> DB
 ```
 
-## Features
+---
 
-- **AI-Driven Data Extraction**: Automatically extracts complaint details from uploaded documents (PDF, TXT, DOCX, EML) or pasted text.
-- **Natural Language Chat**: Allows users to log or edit complaints using a conversational interface.
-- **Complaints List Dashboard**: Searchable and filterable dashboard of all logged complaints with a read-only detail view.
-- **Risk Assessment**: AI evaluates the severity and priority of complaints and proposes actions.
-- **Audit Trail**: Preserves the original AI suggestions for severity and priority.
-- **Real-time Updates**: Uses Server-Sent Events (SSE) to stream pipeline progress to the frontend.
+## Core Features
 
-## Deployment
+- **Multi-Format Document & Image OCR Intake**: Drag-and-drop or attach PDF, DOCX, TXT, EML email files, or raw image formats (PNG, JPG, JPEG) powered by EasyOCR.
+- **Conversational QA Copilot**: Context-aware assistant that extracts structured fields while acknowledging user complaints with structured next-step checklists.
+- **Persistent Dark & Light Mode**: Application-wide theme switcher (`[ DARK ]` / `[ LIGHT ]`) with persistent `localStorage` preference and high-contrast typography tokens.
+- **Dynamic Session Title Generation**: Auto-generates concise 3-5 word conversation titles with a typewriter text animation.
+- **Editorial Monolithic Aesthetic**: Asymmetric 60/40 grid layout, zero rounded corners (`border-radius: 0`), zero box shadows, zero gradients, and 1px structural grid lines.
+- **In-Place Confirmation Actions**: Eliminates browser-native `window.confirm` dialogs in favor of sleek, in-place deletion controls.
+- **Audit Trail & Risk Assessment**: Automated severity (Critical/Major/Minor) and priority (High/Medium/Low) determination with rationale logging and suggested QA actions.
 
-### Local Setup with Docker Compose
+---
 
-1. Clone the repository.
-2. Create a `.env` file in the `backend/` directory and set your `GROQ_API_KEY`.
-3. Run the following command:
+## Edge Cases & Architectural Quirks
 
+### 1. Sequential Upload-and-Chat Execution
+- **Problem**: Uploading a document and typing a chat message simultaneously used to trigger a race condition where the AI chatted before document extraction finished.
+- **Solution**: Bundles chat text inside the `/upload` payload. The backend extracts the document first, updates the payload, and *then* executes the Copilot response using the newly populated fields.
+
+### 2. Relative Date Guardrails
+- **Quirk**: Users often input vague dates like *"expiry date was 6 months ago"* or *"bought recently"*.
+- **Rule**: The extraction pipeline explicitly leaves structured ISO date fields as `null` and instructs the Copilot to politely request exact `YYYY-MM-DD` values.
+
+### 3. Template Parroting Prevention
+- **Quirk**: Smaller 8B parameter models frequently copy schema examples (outputting literal string text like `"customer_name": "string or null"`).
+- **Fix**: Schema templates use strict `null` defaults with comments, paired with a post-processing filter that purges literal string `"null"` outputs into Python `None` objects.
+
+### 4. Competitor Brand & Pharmacy Resolution
+- **Quirk**: Users mention store names and competitor products in one sentence (e.g., *"I usually take Benadryl, but I bought Apollo Pharmacy Cough Syrup and it was discolored"*).
+- **Fix**: Prompt directives isolate the primary complaint subject (`product_name: "Cough Syrup"`), distinguish retailer names (`company_name: "Apollo Pharmacy"`), and ignore competitor mentions (`Benadryl`).
+
+### 5. Risk Assessment Override Protection
+- **Quirk**: Automated risk models could overwrite explicit user inputs.
+- **Fix**: Post-processing logic ensures user-specified severity and priority values are preserved and never demoted by automated algorithms.
+
+---
+
+## Local Development & Setup
+
+### Prerequisites
+- Node.js (v18+)
+- Python (v3.10+)
+
+### Quick Start (One Command)
+Run both backend (FastAPI) and frontend (Vite React) concurrently from the repository root:
+
+```bash
+npm start
+```
+
+### Docker Compose Setup
 ```bash
 docker-compose up --build
 ```
+- **Frontend UI**: `http://localhost:5173`
+- **FastAPI Docs**: `http://localhost:8000/docs`
 
-The frontend will be available at `http://localhost:5173` and the backend at `http://localhost:8000`.
+---
 
-## Guidelines
+## Project Structure
 
-- **No Emojis**: This project strictly prohibits the use of emojis in the codebase, UI, and documentation.
-- **YAGNI**: You Aren't Gonna Need It. Only implement what is explicitly required.
-
+```text
+.
+├── backend/
+│   ├── main.py                  # FastAPI entrypoint & middleware
+│   ├── database.py              # SQLite database configuration
+│   ├── config.py                # Environment settings
+│   ├── agents/
+│   │   ├── graph.py             # LangGraph state machine flow
+│   │   ├── llm_client.py        # Groq Llama 3.1 client wrapper
+│   │   └── prompts/templates.py # Hardened system prompts
+│   ├── models/                  # SQLAlchemy ORM models
+│   ├── repositories/            # Database access layer
+│   ├── routers/                 # REST API endpoints
+│   ├── services/                # Intake & Chat orchestration
+│   └── requirements.txt
+├── frontend/
+│   ├── src/
+│   │   ├── App.tsx              # Main Shell with Theme & Header controls
+│   │   ├── index.css            # Editorial CSS Variables (Light & Dark)
+│   │   ├── features/aiIntake/   # Chat Copilot & Attachment components
+│   │   └── features/complaintForm/ # 14-Field Form Matrix & Badges
+│   ├── package.json
+│   └── vite.config.ts
+├── samples/                     # Test complaint documents (EML, TXT)
+├── docker-compose.yml
+└── package.json                 # Root script runner (npx concurrently)
+```

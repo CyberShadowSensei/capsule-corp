@@ -1,0 +1,13 @@
+{
+  "name": "aivoa-root",
+  "version": "1.0.0",
+  "description": "Root package for AIVOA.AI to manage running frontend and backend simultaneously",
+  "scripts": {
+    "start": "concurrently -k -p \"[{name}]\" -n \"backend,frontend\" -c \"cyan,magenta\" \"npm run start-backend\" \"npm run start-frontend\"",
+    "start-backend": "cd backend && .\\venv\\Scripts\\uvicorn main:app --reload --port 8000",
+    "start-frontend": "cd frontend && npm run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

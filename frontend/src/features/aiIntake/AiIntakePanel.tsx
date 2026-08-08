@@ -89,17 +89,26 @@ const AiIntakePanel: React.FC = () => {
     }
 
     // Step 2: Send chat message if there is text
-    if (msg && currentJobId) {
+    if (msg) {
       setChatInput('');
       dispatch(addChatMessage({ role: 'user', content: msg }));
       dispatch(setChatLoading(true)); 
       try {
-        const res = await fetch(`/api/v1/intake/${currentJobId}/chat`, {
+        const endpoint = currentJobId 
+          ? `/api/v1/intake/${currentJobId}/chat` 
+          : `/api/v1/intake/chat`;
+
+        const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: msg, current_fields: formFields }),
         });
         const data = await res.json();
+        
+        if (!jobId && data.job_id) {
+          dispatch(setJobId(data.job_id));
+        }
+
         if ((data.intent === 'log' || data.intent === 'edit') && data.fields) {
           dispatch(applyAiFields(data.fields));
         }

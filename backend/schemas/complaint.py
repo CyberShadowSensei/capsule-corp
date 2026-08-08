@@ -27,7 +27,7 @@ class ComplaintBase(BaseModel):
     ai_suggested_priority: Optional[str] = None
     ai_rationale: Optional[str] = None
 
-    status: Optional[str] = "open"
+    status: Optional[str] = "draft"
     job_id: Optional[str] = None
 
 

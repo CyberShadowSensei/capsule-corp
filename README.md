@@ -110,11 +110,16 @@ flowchart TD
 - Python (v3.10+)
 
 ### Quick Start (One Command)
-Run both backend (FastAPI) and frontend (Vite React) concurrently from the repository root:
+Run both the backend (FastAPI on port 8000) and frontend (Vite React on port 5173) simultaneously from the repository root:
 
 ```bash
 npm start
 ```
+
+#### Under the Hood (`package.json`)
+The root `package.json` script utilizes `npx concurrently` to manage both service runtimes simultaneously:
+- **`npm run start-backend`**: Starts Uvicorn ASGI server (`uvicorn main:app --reload --port 8000`) in `backend/`.
+- **`npm run start-frontend`**: Starts Vite dev server (`npm run dev`) in `frontend/`.
 
 ### Docker Compose Setup
 ```bash

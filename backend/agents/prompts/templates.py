@@ -134,8 +134,8 @@ Existing complaint fields (preserve any not mentioned in the message):
 User message:
 {message}
 
-Return a JSON object with all 14 fields (use existing values for fields not mentioned, null for unknown):
-{{"customer_name": "string or null","customer_email": "string or null","company_name": "string or null","phone": "string or null","product_name": "string or null","batch_number": "string or null","manufacturing_date": "string or null","expiry_date": "string or null","complaint_description": "string or null","complaint_type": "string or null","date_of_complaint": "string or null","severity": "Critical | Major | Minor | null","priority": "High | Medium | Low | null","ai_proposed_action": "string or null"}}
+Return a JSON object with all 14 fields plus a conversational response (use existing values for fields not mentioned, null for unknown):
+{{"customer_name": "string or null","customer_email": "string or null","company_name": "string or null","phone": "string or null","product_name": "string or null","batch_number": "string or null","manufacturing_date": "string or null","expiry_date": "string or null","complaint_description": "string or null","complaint_type": "string or null","date_of_complaint": "string or null","severity": "Critical | Major | Minor | null","priority": "High | Medium | Low | null","ai_proposed_action": "string or null","response": "string"}}
 
 Return ONLY valid JSON, no markdown fences.
 """

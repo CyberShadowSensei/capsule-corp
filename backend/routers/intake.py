@@ -105,6 +105,21 @@ def paste_complaint(
     return {"job_id": job_id, "status": "pending"}
 
 
+@router.get("/")
+def get_all_jobs(db: Session = Depends(get_db)):
+    jobs = intake_repository.get_all(db)
+    return [
+        {
+            "job_id": job.job_id,
+            "created_at": job.created_at,
+            "status": job.status,
+            "source_type": job.source_type,
+            "source_filename": job.source_filename,
+        }
+        for job in jobs
+    ]
+
+
 @router.get("/{job_id}")
 def get_job(job_id: str, db: Session = Depends(get_db)):
     job = intake_repository.get_by_job_id(db, job_id)

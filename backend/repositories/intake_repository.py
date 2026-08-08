@@ -9,6 +9,10 @@ def get_by_job_id(db: Session, job_id: str) -> Optional[IntakeJob]:
     return db.query(IntakeJob).filter(IntakeJob.job_id == job_id).first()
 
 
+def get_all(db: Session):
+    return db.query(IntakeJob).order_by(IntakeJob.created_at.desc()).all()
+
+
 def create(db: Session, job_id: str, source_type: str, source_filename: Optional[str] = None) -> IntakeJob:
     job = IntakeJob(job_id=job_id, source_type=source_type, source_filename=source_filename)
     db.add(job)

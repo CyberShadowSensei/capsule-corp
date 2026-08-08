@@ -222,8 +222,7 @@ def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] 
             logger.warning("Risk assessment failed in chat: %s", exc)
             rationale = ""
 
-        action_verb = "logged" if intent == "log" else "updated"
-        response = f"Complaint {action_verb}. The form has been populated with the extracted information."
+        response = extracted.pop("response", "I've updated the complaint details!")
         chat_repository.add_message(db, job_id=job_id, role="assistant", content=response)
         
         return {

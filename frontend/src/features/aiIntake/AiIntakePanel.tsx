@@ -77,7 +77,7 @@ const AiIntakePanel: React.FC = () => {
         
         const data = await res.json();
         currentJobId = data.job_id;
-        if (!jobId) {
+        if (!jobId && currentJobId) {
           dispatch(setJobId(currentJobId));
         }
         removeFile();

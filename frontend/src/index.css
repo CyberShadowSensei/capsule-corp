@@ -2,33 +2,39 @@
    Derived from DESIGN.md. Every component pulls from these variables only.
    No ad-hoc hex values in component CSS files. */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap');
 
 :root {
+  /* Editorial Monolithic Dashboard palette */
+  --bg-main: #F4F4F2;
+  --panel-bg: #FFFFFF;
+  --border-grid-dark: #1A1A1A;
+
   /* Color palette */
-  --color-primary: #0A58CA;
-  --color-primary-hover: #0847a8;
-  --color-primary-subtle: #e8f0fb;
+  --color-primary: #1A1A1A;
+  --color-primary-hover: #000000;
+  --color-primary-subtle: #e8e8e8;
   --color-secondary: #6C757D;
-  --color-bg: #FFFFFF;
-  --color-surface: #F8F9FA;
-  --color-border: #DEE2E6;
-  --color-text: #212529;
+  --color-bg: var(--panel-bg);
+  --color-surface: var(--bg-main);
+  --color-border: var(--border-grid-dark);
+  --color-text: #1A1A1A;
   --color-text-muted: #495057;
-  --color-success: #198754;
-  --color-success-subtle: #d1e7dd;
-  --color-warning: #FFC107;
-  --color-warning-subtle: #fff3cd;
-  --color-danger: #DC3545;
-  --color-danger-subtle: #f8d7da;
+  --color-success: #1A1A1A;
+  --color-success-subtle: #e8e8e8;
+  --color-warning: #1A1A1A;
+  --color-warning-subtle: #e8e8e8;
+  --color-danger: #1A1A1A;
+  --color-danger-subtle: #e8e8e8;
 
   /* AI-populated field indicator — the signature interaction treatment */
-  --color-ai-filled: #EEF4FF;
-  --color-ai-filled-border: #A5BEF8;
-  --color-ai-filled-label: #3B5FBB;
+  --color-ai-filled: #F4F4F2;
+  --color-ai-filled-border: #1A1A1A;
+  --color-ai-filled-label: #1A1A1A;
 
   /* Typography */
-  --font-family: 'Inter', sans-serif;
+  --font-family: 'Space Mono', monospace;
+  --font-heading: 'Syne', sans-serif;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
@@ -47,13 +53,13 @@
   --space-10: 40px;
 
   /* Borders */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --border: 1px solid var(--color-border);
+  --radius-sm: 0;
+  --radius-md: 0;
+  --border: 2px solid var(--border-grid-dark);
 
   /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+  --shadow-sm: none;
+  --shadow-md: none;
 }
 
 *,

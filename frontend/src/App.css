@@ -5,13 +5,15 @@
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
+  background-color: var(--bg-main);
 }
 
 .app-header {
-  background: var(--color-primary);
-  color: #fff;
+  background: var(--bg-main);
+  color: var(--color-text);
   flex-shrink: 0;
-  box-shadow: var(--shadow-sm);
+  border-bottom: var(--border);
+  text-transform: uppercase;
 }
 
 .app-header-inner {
@@ -22,20 +24,23 @@
 }
 
 .app-logo {
-  font-size: var(--font-size-lg);
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: #fff;
+  font-family: var(--font-heading);
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--color-text);
 }
 
 .app-header-subtitle {
   font-size: var(--font-size-sm);
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-weight: 700;
 }
 
 .app-main {
   display: grid;
-  grid-template-columns: 1fr 420px;
+  grid-template-columns: 40% 60%;
   flex: 1;
   overflow: hidden;
 }
@@ -43,16 +48,26 @@
 .panel {
   height: 100%;
   overflow: hidden;
+  background-color: var(--panel-bg);
+}
+
+.panel-ai {
+  border-right: var(--border);
+  display: flex;
+  flex-direction: column;
 }
 
 .panel-form {
   overflow-y: auto;
-  border-right: var(--border);
 }
 
-.panel-ai {
-  display: flex;
-  flex-direction: column;
+.app-footer {
+  border-top: var(--border);
+  padding: var(--space-2) var(--space-6);
+  font-size: var(--font-size-xs);
+  background: var(--bg-main);
+  text-transform: uppercase;
+  font-weight: 700;
 }
 
 /* Responsive: collapse to single column on tablet/mobile */
@@ -63,7 +78,7 @@
   }
 
   .panel-ai {
-    border-left: none;
-    border-top: var(--border);
+    border-right: none;
+    border-bottom: var(--border);
   }
 }

@@ -16,13 +16,16 @@ const App: React.FC = () => {
           </div>
         </header>
         <main className="app-main" role="main">
-          <div className="panel panel-form">
-            <ComplaintForm />
-          </div>
           <div className="panel panel-ai">
             <AiIntakePanel />
           </div>
+          <div className="panel panel-form">
+            <ComplaintForm />
+          </div>
         </main>
+        <footer className="app-footer" role="contentinfo">
+          <span>System Status: Operational</span>
+        </footer>
       </div>
     </Provider>
   );

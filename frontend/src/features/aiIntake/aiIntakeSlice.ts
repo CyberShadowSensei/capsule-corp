@@ -37,7 +37,8 @@ const aiIntakeSlice = createSlice({
       state.errorMessage = null;
     },
     updateJobState(state, action: PayloadAction<Partial<IntakeJob>>) {
-      const { status, progress_percent, extracted_payload, error_message } = action.payload;
+      const { status, progress_percent, extracted_payload, error_message, title } = action.payload;
+      if (title !== undefined) state.title = title;
       if (status !== undefined) state.status = status;
       if (progress_percent !== undefined) state.progressPercent = progress_percent;
       if (extracted_payload !== undefined) state.extractedPayload = extracted_payload;

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '../../store';
 import { setJobId, addChatMessage, setChatLoading, setExtractingDocument } from './aiIntakeSlice';
@@ -17,26 +17,47 @@ const AiIntakePanel: React.FC = () => {
 
   const [chatInput, setChatInput] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useIntakeStream(jobId);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const ext = '.' + file.name.split('.').pop()?.toLowerCase();
-      if (!ALLOWED_EXTS.includes(ext)) {
-        dispatch(addChatMessage({ role: 'system', intent: 'error', content: `File type not supported. Allowed: ${ALLOWED_EXTS.join(', ')}` }));
-        return;
+  useEffect(() => {
+    if (status === 'error' && errorMessage) {
+      // Prevent duplicate error messages in chat
+      const lastMsg = chatMessages[chatMessages.length - 1];
+      if (!lastMsg || lastMsg.content !== `Pipeline Error: ${errorMessage}`) {
+        dispatch(addChatMessage({ role: 'system', intent: 'error', content: `Pipeline Error: ${errorMessage}` }));
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
       }
-      if (file.size > 10 * 1024 * 1024) {
-        dispatch(addChatMessage({ role: 'system', intent: 'error', content: 'File exceeds 10MB limit' }));
-        return;
-      }
-      setSelectedFile(file);
     }
+  }, [status, errorMessage, dispatch, chatMessages]);
+
+  const handleFileSelection = (file: File) => {
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+    if (!ALLOWED_EXTS.includes(ext) && !['.png', '.jpg', '.jpeg'].includes(ext)) {
+      dispatch(addChatMessage({ role: 'system', intent: 'error', content: `File type not supported.` }));
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      dispatch(addChatMessage({ role: 'system', intent: 'error', content: 'File exceeds 10MB limit' }));
+      return;
+    }
+    setSelectedFile(file);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) handleFileSelection(e.target.files[0]);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); };
+  const handleDragLeave = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(false); };
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files?.[0]) handleFileSelection(e.dataTransfer.files[0]);
   };
 
   const removeFile = () => {
@@ -52,15 +73,25 @@ const AiIntakePanel: React.FC = () => {
     const msg = chatInput.trim();
     let currentJobId = jobId;
 
+    const displayMsg = msg 
+      ? (selectedFile ? `${msg}\n[Attached: ${selectedFile.name}]` : msg)
+      : `[Uploaded document: ${selectedFile?.name}]`;
+      
+    setChatInput('');
+    dispatch(addChatMessage({ role: 'user', content: displayMsg }));
+    dispatch(setChatLoading(true));
+
     // Step 1: Upload file if present
     if (selectedFile) {
-      dispatch(setChatLoading(true));
       dispatch(setExtractingDocument(true));
       try {
         const fd = new FormData();
         fd.append('file', selectedFile);
         if (currentJobId) {
           fd.append('job_id', currentJobId);
+        }
+        if (msg) {
+          fd.append('message', msg);
         }
         
         const res = await fetch('/api/v1/intake/upload', {
@@ -69,8 +100,7 @@ const AiIntakePanel: React.FC = () => {
         });
         
         if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.detail || 'Upload failed');
+          throw new Error('Upload failed');
         }
         
         const data = await res.json();
@@ -79,8 +109,12 @@ const AiIntakePanel: React.FC = () => {
           dispatch(setJobId(currentJobId));
         }
         removeFile();
+        
+        // Since the backend will handle generating the chat response after extraction, 
+        // we can simply return and wait for the SSE stream or chat refresh.
+        return;
       } catch (err: unknown) {
-        dispatch(addChatMessage({ role: 'system', intent: 'error', content: "I'm having trouble connecting to the server. Please check your connection." }));
+        dispatch(addChatMessage({ role: 'system', intent: 'error', content: "Upload failed. Please check your connection." }));
         dispatch(setChatLoading(false));
         dispatch(setExtractingDocument(false));
         return; 
@@ -89,9 +123,6 @@ const AiIntakePanel: React.FC = () => {
 
     // Step 2: Send chat message if there is text
     if (msg) {
-      setChatInput('');
-      dispatch(addChatMessage({ role: 'user', content: msg }));
-      dispatch(setChatLoading(true)); 
       try {
         const endpoint = currentJobId 
           ? `/api/v1/intake/${currentJobId}/chat` 
@@ -102,6 +133,12 @@ const AiIntakePanel: React.FC = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: msg, current_fields: formFields }),
         });
+        
+        if (!res.ok) {
+           const errData = await res.json().catch(() => ({}));
+           throw new Error(errData.detail || 'Chat request failed');
+        }
+        
         const data = await res.json();
         
         if (!jobId && data.job_id) {
@@ -111,10 +148,21 @@ const AiIntakePanel: React.FC = () => {
         if ((data.intent === 'log' || data.intent === 'edit') && data.fields) {
           dispatch(applyAiFields(data.fields));
         }
-        const bubbleContent = data.response || 'No response.';
+        const bubbleContent = data.response || "I have processed your request, but couldn't generate a proper response. Please check the form to see the updates.";
         dispatch(addChatMessage({ role: 'assistant', content: bubbleContent, intent: data.intent ?? 'qa' }));
-      } catch {
-        dispatch(addChatMessage({ role: 'system', intent: 'error', content: "I'm having trouble connecting to the server. Please check your connection." }));
+        
+        if (!title && chatMessages.length >= 2) {
+          fetch(`/api/v1/intake/${currentJobId}/generate-title`, { method: 'POST' })
+            .then(r => r.json())
+            .then(tData => {
+              if (tData.title) {
+                dispatch({ type: 'aiIntake/updateJobState', payload: { title: tData.title } });
+              }
+            })
+            .catch(console.error);
+        }
+      } catch (err: any) {
+        dispatch(addChatMessage({ role: 'system', intent: 'error', content: `Error: ${err.message || "I'm having trouble connecting to the server. Please check your connection."}` }));
       } finally {
         dispatch(setChatLoading(false));
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
@@ -183,7 +231,13 @@ const AiIntakePanel: React.FC = () => {
             AI responses may contain errors. Always verify critical information before submitting.
           </div>
 
-          <div className="chat-input-container">
+          <div 
+            className={`chat-input-container ${isDragging ? 'dragging' : ''}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            style={isDragging ? { border: '2px dashed var(--color-primary)', background: 'var(--color-bg)' } : {}}
+          >
             {selectedFile && (
               <div className="attachment-chip">
                 <span className="attachment-filename">{selectedFile.name}</span>
@@ -202,7 +256,7 @@ const AiIntakePanel: React.FC = () => {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".pdf,.txt,.docx,.eml"
+                accept=".pdf,.txt,.docx,.eml,.png,.jpg,.jpeg"
                 className="hidden-file-input"
                 onChange={handleFileChange}
                 aria-hidden="true"

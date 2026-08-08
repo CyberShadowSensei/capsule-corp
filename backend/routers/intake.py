@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/intake", tags=["intake"])
 
-ALLOWED_EXTENSIONS = {".pdf", ".txt", ".docx", ".eml"}
+ALLOWED_EXTENSIONS = {".pdf", ".txt", ".docx", ".eml", ".png", ".jpg", ".jpeg"}
 
 
 class PasteRequest(BaseModel):
@@ -45,6 +45,7 @@ def upload_complaint(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     job_id: Optional[str] = Form(None),
+    message: Optional[str] = Form(None),
     db: Session = Depends(get_db),
 ):
     ext = os.path.splitext(file.filename or "")[1].lower()
@@ -72,7 +73,7 @@ def upload_complaint(
         job_id = str(uuid.uuid4())
         job = intake_service.create_job(db, job_id=job_id, source_type="upload", source_filename=file.filename)
 
-    background_tasks.add_task(intake_service.run_pipeline, job_id=job_id, raw_bytes=content, filename=file.filename)
+    background_tasks.add_task(intake_service.run_pipeline, job_id=job_id, raw_bytes=content, filename=file.filename, user_message=message)
 
     return {"job_id": job_id, "status": "pending"}
 
@@ -142,6 +143,14 @@ def get_job(job_id: str, db: Session = Depends(get_db)):
 def generate_title(job_id: str, db: Session = Depends(get_db)):
     title = intake_service.generate_title(db, job_id)
     return {"title": title}
+
+
+@router.delete("/{job_id}")
+def delete_job(job_id: str, db: Session = Depends(get_db)):
+    success = intake_repository.delete(db, job_id)
+    if not success:
+        raise IntakeJobNotFoundError("Job not found")
+    return {"status": "success", "message": "Job deleted successfully"}
 
 
 @router.get("/{job_id}/stream")

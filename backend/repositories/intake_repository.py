@@ -43,3 +43,12 @@ def update_title(db: Session, job_id: str, title: str) -> Optional[IntakeJob]:
     db.commit()
     db.refresh(job)
     return job
+
+def delete(db: Session, job_id: str) -> bool:
+    job = get_by_job_id(db, job_id)
+    if job is None:
+        return False
+    db.delete(job)
+    db.commit()
+    return True
+

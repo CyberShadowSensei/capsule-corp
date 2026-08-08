@@ -11,3 +11,5 @@ langgraph
 groq
 pypdf
 python-docx
+Pillow
+easyocr

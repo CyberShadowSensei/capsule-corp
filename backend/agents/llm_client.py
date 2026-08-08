@@ -9,7 +9,7 @@ from config import settings
 logger = logging.getLogger(__name__)
 
 # Model constants
-PRIMARY_MODEL = "gemma2-9b-it"
+PRIMARY_MODEL = "llama-3.1-8b-instant"
 ESCALATION_MODEL = "llama-3.3-70b-versatile"
 
 _client: Optional[Groq] = None

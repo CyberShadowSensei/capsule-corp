@@ -151,15 +151,8 @@ const AiIntakePanel: React.FC = () => {
         const bubbleContent = data.response || "I have processed your request, but couldn't generate a proper response. Please check the form to see the updates.";
         dispatch(addChatMessage({ role: 'assistant', content: bubbleContent, intent: data.intent ?? 'qa' }));
         
-        if (!title && chatMessages.length >= 2) {
-          fetch(`/api/v1/intake/${currentJobId}/generate-title`, { method: 'POST' })
-            .then(r => r.json())
-            .then(tData => {
-              if (tData.title) {
-                dispatch({ type: 'aiIntake/updateJobState', payload: { title: tData.title } });
-              }
-            })
-            .catch(console.error);
+        if (data.title) {
+          dispatch({ type: 'aiIntake/updateJobState', payload: { title: data.title } });
         }
       } catch (err: any) {
         dispatch(addChatMessage({ role: 'system', intent: 'error', content: `Error: ${err.message || "I'm having trouble connecting to the server. Please check your connection."}` }));

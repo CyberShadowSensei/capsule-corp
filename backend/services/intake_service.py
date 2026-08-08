@@ -172,6 +172,12 @@ def run_pipeline(job_id: str, raw_bytes: bytes, filename: str, user_message: Opt
             chat(db2, job_id, user_message, insert_user_message=False)
         finally:
             db2.close()
+    else:
+        db2 = SessionLocal()
+        try:
+            generate_title(db2, job_id)
+        finally:
+            db2.close()
 
 
 def run_pipeline_text(job_id: str, text: str) -> None:
@@ -272,11 +278,15 @@ def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] 
 
         chat_repository.add_message(db, job_id=job_id, role="assistant", content=response)
         
+        # Auto-generate updated title in real-time as conversation evolves
+        title = generate_title(db, job_id)
+        
         return {
             "intent": intent,
             "fields": extracted,
             "rationale": rationale,
             "response": response,
+            "title": title
         }
 
     # Step 3: plain Q&A
@@ -295,7 +305,11 @@ def chat(db: Session, job_id: str, message: str, current_fields: Optional[dict] 
     ]
     response_text = chat_completion(qa_messages, model=PRIMARY_MODEL)
     chat_repository.add_message(db, job_id=job_id, role="assistant", content=response_text)
-    return {"intent": "qa", "fields": None, "rationale": None, "response": response_text}
+    
+    # Auto-generate updated title in real-time as conversation evolves
+    title = generate_title(db, job_id)
+    
+    return {"intent": "qa", "fields": None, "rationale": None, "response": response_text, "title": title}
 
 
 def generate_title(db: Session, job_id: str) -> str:
